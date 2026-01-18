@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="/image-input.css">
 <link rel="stylesheet" href="/palette.css">
 <link rel="stylesheet" href="/prompts.css">
+<link rel="stylesheet" href="/skills.css">
 <link rel="stylesheet" href="/changes.css">
 <link rel="stylesheet" href="/mentions.css">
 <link rel="stylesheet" href="/config.css">
@@ -29,6 +30,7 @@
       </div>
       <div class="panel-controls">
         <button type="button" id="promptsPaletteBtn" class="ghost-btn">Prompts</button>
+        <button type="button" id="skillsPaletteBtn" class="ghost-btn">Skills</button>
         <button type="button" id="commandPaletteBtn" class="ghost-btn">Commands</button>
         <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
@@ -526,6 +528,40 @@
           <div class="prompt-fill-actions">
             <button type="button" id="promptFillCancel" class="ghost-btn">Back</button>
             <button type="button" id="promptFillApply">Insert Prompt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="palette-overlay" id="skillsPalette" hidden aria-hidden="true">
+    <div class="palette-card skills-card" role="dialog" aria-modal="true" aria-labelledby="skillsPaletteTitle">
+      <div class="palette-header">
+        <div>
+          <h2 id="skillsPaletteTitle">Skills</h2>
+          <p>Guided workflows from your local skills library.</p>
+        </div>
+        <button type="button" id="closeSkillsPaletteBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="palette-body">
+        <input
+          id="skillsPaletteInput"
+          class="palette-input"
+          placeholder="Search skills"
+          autocomplete="off"
+        >
+        <div class="palette-section">
+          <h3>Skills</h3>
+          <div class="palette-list" id="skillsPaletteList"></div>
+          <div class="palette-note" id="skillsEmpty" hidden>No skills found.</div>
+        </div>
+        <div class="skills-preview" id="skillsPreview" hidden>
+          <div class="skills-preview-header">
+            <h3 id="skillsPreviewTitle">Skill</h3>
+            <p id="skillsPreviewMeta"></p>
+          </div>
+          <pre class="skills-preview-body" id="skillsPreviewBody"></pre>
+          <div class="skills-preview-actions">
+            <button type="button" id="skillsInsertBtn">Insert Skill</button>
           </div>
         </div>
       </div>

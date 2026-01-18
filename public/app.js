@@ -12,6 +12,7 @@ import { createApprovalUi } from "./approval-ui.js";
 import { createExecPolicyPanel } from "./execpolicy-panel.js";
 import { createCommandPalette } from "./command-palette.js";
 import { createPromptsPalette } from "./prompts-palette.js";
+import { createSkillsPalette } from "./skills-palette.js";
 import { createChangesStore } from "./changes-store.js";
 import { createDiffPanel, createReviewPanel } from "./changes-panels.js";
 import { createMentions } from "./mentions.js";
@@ -32,8 +33,10 @@ const modelCatalog = Array.isArray(appConfig.modelCatalog) ? appConfig.modelCata
 const mockMode = Boolean(appConfig.mockMode);
 const mockSessions = Array.isArray(appConfig.mockSessions) ? appConfig.mockSessions : [];
 const mockPrompts = Array.isArray(appConfig.mockPrompts) ? appConfig.mockPrompts : [];
+const mockSkills = Array.isArray(appConfig.mockSkills) ? appConfig.mockSkills : [];
 let workspaceFiles = Array.isArray(appConfig.workspaceFiles) ? appConfig.workspaceFiles : [];
 let promptFixtures = mockPrompts;
+let skillFixtures = mockSkills;
 const mockBadge = $(".mock-badge");
 if (mockBadge) {
   if (mockMode) {
@@ -132,13 +135,19 @@ const execpolicyPreviewInput = $("#execpolicyPreviewInput");
 const execpolicyPreviewResult = $("#execpolicyPreviewResult");
 const execpolicyPreviewBtn = $("#execpolicyPreviewBtn");
 const promptsPaletteBtn = $("#promptsPaletteBtn");
+const skillsPaletteBtn = $("#skillsPaletteBtn");
 const commandPaletteBtn = $("#commandPaletteBtn");
 const promptsPaletteOverlay = $("#promptsPalette");
+const skillsPaletteOverlay = $("#skillsPalette");
 const closePromptsPaletteBtn = $("#closePromptsPaletteBtn");
+const closeSkillsPaletteBtn = $("#closeSkillsPaletteBtn");
 const promptsPaletteInput = $("#promptsPaletteInput");
+const skillsPaletteInput = $("#skillsPaletteInput");
 const promptsPaletteList = $("#promptsPaletteList");
+const skillsPaletteList = $("#skillsPaletteList");
 const promptsPaletteSection = $("#promptsPaletteSection");
 const promptsEmpty = $("#promptsEmpty");
+const skillsEmpty = $("#skillsEmpty");
 const promptsDuplicatesSection = $("#promptsDuplicatesSection");
 const promptsDuplicatesList = $("#promptsDuplicatesList");
 const promptFillPanel = $("#promptFillPanel");
@@ -147,6 +156,11 @@ const promptFillSubtitle = $("#promptFillSubtitle");
 const promptFillFields = $("#promptFillFields");
 const promptFillApply = $("#promptFillApply");
 const promptFillCancel = $("#promptFillCancel");
+const skillsPreview = $("#skillsPreview");
+const skillsPreviewTitle = $("#skillsPreviewTitle");
+const skillsPreviewMeta = $("#skillsPreviewMeta");
+const skillsPreviewBody = $("#skillsPreviewBody");
+const skillsInsertBtn = $("#skillsInsertBtn");
 const commandPaletteOverlay = $("#commandPalette");
 const closeCommandPaletteBtn = $("#closeCommandPaletteBtn");
 const commandPaletteInput = $("#commandPaletteInput");
@@ -164,6 +178,7 @@ const reviewFiles = $("#reviewFiles");
 const reviewEmpty = $("#reviewEmpty");
 const applyResult = $("#applyResult");
 let promptsPalette = null;
+let skillsPalette = null;
 let mentions = null;
 
 const threadState = createThreadState({ outputEl: output, threadSelector });
@@ -397,14 +412,19 @@ window.__TEST__.refreshThreadList = () => threadState.updateThreadSelector();
 window.__TEST__.setPrompts = (value) => {
   promptFixtures = Array.isArray(value) ? value : [];
 };
+window.__TEST__.setSkills = (value) => {
+  skillFixtures = Array.isArray(value) ? value : [];
+};
 window.__TEST__.setWorkspaceFiles = (value) => {
   workspaceFiles = Array.isArray(value) ? value : [];
   mentions?.refresh?.();
 };
 window.__TEST__.getPrompts = () => promptFixtures;
+window.__TEST__.getSkills = () => skillFixtures;
 window.__TEST__.getWorkspaceFiles = () => workspaceFiles;
 window.__TEST__.startNewSession = () => {
   promptsPalette?.close?.();
+  skillsPalette?.close?.();
 };
 window.__TEST__.setConfigProfiles = (profiles, baseConfig) => {
   configPanelController?.setProfiles?.(profiles, baseConfig);
@@ -549,8 +569,31 @@ promptsPalette = createPromptsPalette({
   }
 });
 
+skillsPalette = createSkillsPalette({
+  overlay: skillsPaletteOverlay,
+  closeBtn: closeSkillsPaletteBtn,
+  input: skillsPaletteInput,
+  listEl: skillsPaletteList,
+  emptyEl: skillsEmpty,
+  previewPanel: skillsPreview,
+  previewTitleEl: skillsPreviewTitle,
+  previewMetaEl: skillsPreviewMeta,
+  previewBodyEl: skillsPreviewBody,
+  insertBtn: skillsInsertBtn,
+  getSkills: () => skillFixtures,
+  onInsert: (text) => {
+    if (promptInput) {
+      promptInput.value = text;
+      promptInput.focus();
+    }
+  }
+});
+
 if (promptsPaletteBtn) {
   promptsPaletteBtn.addEventListener("click", () => promptsPalette.open());
+}
+if (skillsPaletteBtn) {
+  skillsPaletteBtn.addEventListener("click", () => skillsPalette.open());
 }
 if (commandPaletteBtn) {
   commandPaletteBtn.addEventListener("click", () => commandPalette.open());
