@@ -1,6 +1,6 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
-import { ensureAdvancedOptionsOpen, ensureConnected, openApp } from '../support/ui.mjs';
+import { ensureAdvancedOptionsOpen, ensureConnected, getThreadIds, openApp } from '../support/ui.mjs';
 
 async function getWorkspaceRoot(page) {
   return page.evaluate(() => window.__APP_CONFIG__?.workspaceRoot || '');
@@ -281,9 +281,8 @@ Given('I have two threads with different network and search settings', async fun
   await this.page.locator('#applyOptionsBtn').click();
   await expect(this.page.locator('.message').filter({ hasText: /Thread options set:/ })).toBeVisible({ timeout: 5000 });
 
-  let threadIds = await this.page.$$eval('#threadSelector option', (options) =>
-    options.map((option) => option.value).filter(Boolean)
-  );
+  await expect.poll(async () => (await getThreadIds(this.page)).length).toBe(1);
+  let threadIds = await getThreadIds(this.page);
   const firstThreadId = threadIds[threadIds.length - 1];
 
   await this.page.locator('#newThreadBtn').click();
@@ -294,9 +293,8 @@ Given('I have two threads with different network and search settings', async fun
   await this.page.locator('#applyOptionsBtn').click();
   await expect(this.page.locator('.message').filter({ hasText: /Thread options set:/ })).toBeVisible({ timeout: 5000 });
 
-  threadIds = await this.page.$$eval('#threadSelector option', (options) =>
-    options.map((option) => option.value).filter(Boolean)
-  );
+  await expect.poll(async () => (await getThreadIds(this.page)).length).toBe(2);
+  threadIds = await getThreadIds(this.page);
   const secondThreadId = threadIds[threadIds.length - 1];
 
   this.threadBadgeExpectations = new Map([
@@ -310,6 +308,25 @@ When('I view the thread list', async function () {
 });
 
 Then('each thread shows the correct badges', async function () {
+  await this.page.evaluate(() => {
+    window.__TEST__?.refreshThreadList?.();
+  });
+  const snapshot = await this.page.evaluate(() => window.__TEST__?.getThreadOptionsSnapshot?.() || {});
+  for (const [threadId, badges] of this.threadBadgeExpectations.entries()) {
+    const options = snapshot[threadId] || {};
+    if (badges.includes('[NET-OFF]')) {
+      expect(options.networkAccessEnabled).toBe(false);
+    }
+    if (badges.includes('[NET]')) {
+      expect(options.networkAccessEnabled).toBe(true);
+    }
+    if (badges.includes('[SEARCH-OFF]')) {
+      expect(options.webSearchEnabled).toBe(false);
+    }
+    if (badges.includes('[SEARCH]')) {
+      expect(options.webSearchEnabled).toBe(true);
+    }
+  }
   for (const [threadId, badges] of this.threadBadgeExpectations.entries()) {
     const option = this.page.locator(`#threadSelector option[value="${threadId}"]`);
     for (const badge of badges) {

@@ -291,6 +291,8 @@ window.__TEST__.setLocalChanges = (value) => {
   changesStore.setLocalChanges(value);
 };
 window.__TEST__.hasLocalChanges = () => changesStore.hasLocalChanges();
+window.__TEST__.getThreadOptionsSnapshot = () => threadOptions.getOptionsSnapshot();
+window.__TEST__.refreshThreadList = () => threadState.updateThreadSelector();
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
