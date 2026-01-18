@@ -8,7 +8,8 @@ export function createUiActions({
   approvalRules,
   persistState,
   onUsage,
-  schemaInput
+  schemaInput,
+  imageInput
 }) {
   const { addMessage, addSystemMessage, addStructuredOutput, handleItem } = uiRenderer;
   const defaultThreadOptions = threadOptions.getDefaultOptions();
@@ -287,6 +288,18 @@ export function createUiActions({
 
       addMessage(`> ${value}`, "user");
       const payload = { type: "message", text: value };
+      const attachments = imageInput?.getAttachments?.() || [];
+      if (attachments.length > 0) {
+        payload.inputs = [
+          { type: "text", text: value },
+          ...attachments.map((file) => ({
+            type: "local_image",
+            name: file.name,
+            mimeType: file.mimeType,
+            dataUrl: file.dataUrl
+          }))
+        ];
+      }
       if (schemaResult.schema) {
         payload.outputSchema = schemaResult.schema;
         pendingStructuredOutputs.push(true);
@@ -295,6 +308,9 @@ export function createUiActions({
       promptInput.value = "";
       if (schemaInput) {
         schemaInput.value = "";
+      }
+      if (attachments.length > 0 && imageInput?.clear) {
+        imageInput.clear();
       }
       promptInput.focus();
     };

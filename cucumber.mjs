@@ -11,6 +11,7 @@ export default {
       'features/auth.feature',
       'features/sessions.feature',
       'features/structured-output.feature',
+      'features/images.feature',
     ],
     import: [
       'features/step-definitions/**/*.mjs',

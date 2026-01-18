@@ -3,6 +3,7 @@ import { createThreadOptionsController } from "./thread-options.js";
 import { createThreadState } from "./thread-state.js";
 import { createUiActions } from "./ui-actions.js";
 import { createWsClient } from "./ws-client.js";
+import { createImageInput } from "./image-input.js";
 import { createModalController } from "./modal.js";
 import { loadThreadState, saveThreadState } from "./thread-storage.js";
 import { createApprovalRulesStore } from "./approval-rules.js";
@@ -36,6 +37,10 @@ const { addMessage, addSystemMessage } = uiRenderer;
 const form = $("#form");
 const promptInput = $("#prompt");
 const schemaInput = $("#structuredSchema");
+const imageFileInput = $("#imageFileInput");
+const imageDropzone = $("#imageDropzone");
+const imageThumbs = $("#imageThumbs");
+const imageDropHint = $("#imageDropHint");
 const submitBtn = form.querySelector("button");
 const statusDot = $("#statusDot");
 const statusText = $("#statusText");
@@ -129,6 +134,12 @@ const sessionsStore = createSessionsStore({
 });
 const approvalRulesStore = createApprovalRulesStore();
 const approvalUi = createApprovalUi({ uiRenderer, rulesStore: approvalRulesStore });
+const imageInput = createImageInput({
+  inputEl: imageFileInput,
+  dropzoneEl: imageDropzone,
+  thumbsEl: imageThumbs,
+  placeholderEl: imageDropHint
+});
 
 const statusPanelController = createStatusPanel({
   panel: statusPanel,
@@ -268,7 +279,8 @@ const uiActions = createUiActions({
   approvalRules: approvalRulesStore,
   persistState: persistThreadState,
   onUsage: (usage) => statusPanelController.setUsage(usage),
-  schemaInput
+  schemaInput,
+  imageInput
 });
 
 const wsClient = createWsClient({

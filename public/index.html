@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/approvals.css">
 <link rel="stylesheet" href="/structured-output.css">
+<link rel="stylesheet" href="/image-input.css">
 </head>
 <body>
   <div class="header">
@@ -46,6 +47,17 @@
           placeholder='{"type":"object","properties":{"result":{"type":"string"}}}'
         ></textarea>
         <span class="field-note">Applies to the next message only.</span>
+      </div>
+      <div class="image-input" id="imageInput">
+        <div class="image-input__controls">
+          <label class="image-input__label" for="imageFileInput">Attach image</label>
+          <span class="image-input__hint">PNG/JPG/GIF • drag &amp; drop supported</span>
+        </div>
+        <input class="image-input__file" id="imageFileInput" type="file" accept="image/*" multiple>
+        <div class="image-input__dropzone" id="imageDropzone">
+          <div class="image-input__placeholder" id="imageDropHint">Drop images here</div>
+          <div class="image-input__thumbs" id="imageThumbs"></div>
+        </div>
       </div>
       <form id="form">
         <input 
