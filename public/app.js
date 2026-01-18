@@ -3,6 +3,7 @@ import { createThreadOptionsController } from "./thread-options.js";
 import { createThreadState } from "./thread-state.js";
 import { createUiActions } from "./ui-actions.js";
 import { createWsClient } from "./ws-client.js";
+import { createAppServerClient } from "./app-server-client.js";
 import { createImageInput } from "./image-input.js";
 import { createModalController } from "./modal.js";
 import { loadThreadState, saveThreadState } from "./thread-storage.js";
@@ -282,6 +283,31 @@ const uiActions = createUiActions({
   schemaInput,
   imageInput
 });
+
+const appServerClient = createAppServerClient({
+  onEvent: uiActions.handleEvent,
+  onSend: (payload) => {
+    if (testState) {
+      testState.lastAppServerPayload = payload;
+    }
+  }
+});
+
+if (testState) {
+  const appServerHarness = {
+    connect: (options) => appServerClient.connect(options),
+    queueRequest: (options) => appServerClient.queueRequest(options),
+    respond: (id, result, error) => appServerClient.receive({ id, result, error }),
+    emitMixed: (options) => appServerClient.emitMixed(options),
+    emitDiffUpdate: (options) => appServerClient.emitDiffUpdate(options),
+    normalizedEvents: appServerClient.normalizedEvents,
+    completedRequests: appServerClient.completedRequests
+  };
+  Object.defineProperty(appServerHarness, "lastRequest", {
+    get: () => appServerClient.lastRequest
+  });
+  testState.appServer = appServerHarness;
+}
 
 const wsClient = createWsClient({
   statusDot,

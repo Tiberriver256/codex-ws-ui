@@ -2,6 +2,7 @@ export default {
   default: {
     paths: [
       'features/core-chat.feature',
+      'features/app-server.feature',
       'features/threading.feature',
       'features/connection-status.feature',
       'features/models.feature',
