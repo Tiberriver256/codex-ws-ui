@@ -1,6 +1,6 @@
 # Codex WebSocket UI (zx one-liner)
 
-Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. The `run.sh` file contains a single-line `zx --install` command that starts a server on `http://127.0.0.1:8080` and streams responses over WebSockets.
+Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Starts a server on `http://127.0.0.1:8080` and streams responses over WebSockets.
 
 ## Requirements
 - Node.js 18+
@@ -9,11 +9,12 @@ Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. The `run.sh` f
 ## Usage
 Set `CODEX_API_KEY` in your shell, then run:
 ```bash
-bash run.sh
+npx zx https://raw.githubusercontent.com/Tiberriver256/codex-ws-ui/main/server.mjs --install
 ```
 
 Open `http://127.0.0.1:8080` in your browser.
 
 ## Notes
-- The script uses `zx --install`, so it will install `@openai/codex-sdk` and `ws` on first run.
+- The `--install` flag will automatically install `@openai/codex-sdk` and `ws` on first run.
 - Localhost only, no auth.
+- Review the [server.mjs](./server.mjs) source before running if you prefer to verify the script contents.
