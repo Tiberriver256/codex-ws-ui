@@ -18,16 +18,16 @@ Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Streams AI age
 
 ## Quick Start
 
-### Method 1: Using the original simple server (zx one-liner)
+### Method 1: Using npx (zx one-liner)
 
 Set `CODEX_API_KEY` in your shell, then run:
 ```bash
 npx zx https://raw.githubusercontent.com/Tiberriver256/codex-ws-ui/main/server.mjs --install
 ```
 
-### Method 2: Using the enhanced server with mock mode
+### Method 2: Clone and run locally
 
-Clone this repository and run locally:
+Clone this repository and run:
 
 ```bash
 # Install dependencies
@@ -38,34 +38,25 @@ npm run start:mock
 
 # Run in REAL mode (requires CODEX_API_KEY)
 export CODEX_API_KEY=your_key_here
-npm run start:enhanced
-
-# Or use the original simple server
 npm start
 ```
 
 Open `http://127.0.0.1:8080` in your browser.
 
-## Servers Overview
+## Server Features
 
-### `server.mjs` (Original)
-- Simple, minimal implementation
-- Requires `CODEX_API_KEY`
-- Basic text streaming
-- Perfect for quick one-liner usage
-
-### `server-enhanced.mjs` (New)
-- Enhanced UI with event visualization
+The server includes:
+- Rich UI with event visualization
 - Supports **mock mode** with `CODEX_MOCK=1`
 - **Multiple thread support** - Create, switch, and manage multiple conversation threads
 - Rich event handling (todos, reasoning, commands, file changes)
-- Better error handling
 - Visual status indicators
 - No API key required in mock mode
+- Backward compatible with simple text-based interface
 
 ## Multiple Threads
 
-The enhanced server supports multiple independent conversation threads:
+The server supports multiple independent conversation threads:
 - **Create new threads** - Click "+ New Thread" to start a fresh conversation
 - **Switch between threads** - Use the dropdown to switch between threads
 - **Preserved history** - Each thread maintains its own conversation history

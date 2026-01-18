@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "start:enhanced": "node server-enhanced.mjs",
-    "start:mock": "CODEX_MOCK=1 node server-enhanced.mjs",
+    "start:mock": "CODEX_MOCK=1 node server.mjs",
     "test": "CODEX_MOCK=1 node test-mock.mjs"
   },
   "keywords": [
