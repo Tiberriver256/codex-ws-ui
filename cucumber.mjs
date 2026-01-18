@@ -1,0 +1,26 @@
+export default {
+  default: {
+    paths: [
+      'features/core-chat.feature',
+      'features/threading.feature',
+      'features/connection-status.feature',
+      'features/models.feature',
+      'features/thread-options-basic.feature',
+    ],
+    import: [
+      'features/step-definitions/**/*.mjs',
+      'features/support/**/*.mjs',
+    ],
+    format: [
+      'progress',
+      'html:test-results/cucumber-report.html',
+      'json:test-results/cucumber-report.json',
+    ],
+    publishQuiet: true,
+    parallel: 1,
+    worldParameters: {
+      baseURL: process.env.BASE_URL || 'http://127.0.0.1:8080',
+      mock: process.env.CODEX_MOCK || '1',
+    },
+  },
+};

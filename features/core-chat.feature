@@ -12,6 +12,7 @@ Feature: Core chat rendering
     When I send "Hello"
     Then I see an assistant message with content
     And the assistant message includes "Hello!"
+    And the assistant message includes "mock Codex assistant"
 
   Scenario: Reasoning message is visible
     When I send "Hello"
@@ -46,3 +47,11 @@ Feature: Core chat rendering
   Scenario: User message formatting is preserved
     When I send "Hello world"
     Then I see a user message starting with "> "
+
+  Scenario: Full conversation flow shows all core events
+    When I send "Hello"
+    Then I see a processing message
+    And I see a reasoning message
+    And I see a todo list update
+    And I see an assistant message with content
+    And I see a usage message

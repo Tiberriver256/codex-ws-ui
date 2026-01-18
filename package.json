@@ -7,7 +7,8 @@
     "start": "node server.mjs",
     "start:mock": "CODEX_MOCK=1 node server.mjs",
     "test": "CODEX_MOCK=1 node test-mock.mjs",
-    "test:e2e": "npx playwright test"
+    "test:e2e": "npx playwright test",
+    "test:bdd": "cucumber-js"
   },
   "keywords": [
     "codex",
@@ -22,6 +23,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^12.5.0",
     "@playwright/test": "^1.55.1",
     "playwright": "^1.57.0"
   }
