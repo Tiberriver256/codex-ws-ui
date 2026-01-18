@@ -10,6 +10,7 @@ Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Streams AI age
 - 🧪 **Mock mode** - Test without auth using realistic simulations
 - 📊 **Event visualization** - See todos, reasoning, command execution, and file changes
 - 🔌 **WebSocket-based** - Efficient bidirectional communication
+- ⚙️ **Thread options** - Configure model, reasoning, approvals, sandbox, and working directories per thread
 
 ## Requirements
 
@@ -41,16 +42,12 @@ npm start
 
 Open `http://127.0.0.1:8080` in your browser.
 
-## Server Features
+## Modes
 
-The server includes:
-- Rich UI with event visualization
-- Supports **mock mode** with `CODEX_MOCK=1`
-- **Multiple thread support** - Create, switch, and manage multiple conversation threads
-- Rich event handling (todos, reasoning, commands, file changes)
-- Visual status indicators
-- No auth required in mock mode
-- Backward compatible with simple text-based interface
+The UI can run against the real Codex SDK or a local mock.
+
+- **Mock mode**: `CODEX_MOCK=1 npm start` (or `npm run start:mock`) runs without auth.
+- **Real mode**: `npm start` uses the Codex SDK. Make sure your Codex auth is set up in your environment.
 
 ## Multiple Threads
 
@@ -86,15 +83,15 @@ Try it:
 ```bash
 npm run start:mock
 # or
-CODEX_MOCK=1 node server-enhanced.mjs
+CODEX_MOCK=1 node server.mjs
 ```
 
 ## Event Types Supported
 
-The enhanced server visualizes all Codex SDK event types:
+The UI visualizes these Codex SDK event types:
 
-- **Thread Events**: Thread started/stopped
-- **Turn Events**: Turn started/completed/failed
+- **Thread Events**: Created, switched, started, ID assigned, options updated
+- **Turn Events**: Started/completed/failed
 - **Agent Messages**: Final responses from the AI
 - **Reasoning**: Internal thought process
 - **Command Execution**: Shell commands with output
@@ -118,6 +115,11 @@ This runs automated tests to verify:
 - Non-streamed API
 - Todo list updates
 
+Run end-to-end tests (Playwright):
+```bash
+npm run test:e2e
+```
+
 ## Development
 
 ```bash
@@ -128,7 +130,7 @@ npm install
 npm run start:mock
 
 # Start in real mode
-npm run start:enhanced
+npm start
 ```
 
 ## Architecture
@@ -147,10 +149,10 @@ npm run start:enhanced
 
 ## Files
 
-- `server.mjs` - Original simple server
-- `server-enhanced.mjs` - Enhanced server with rich UI and mock support
+- `server.mjs` - Server + UI (rich event handling, mock support, thread options)
 - `mock-codex.mjs` - Mock Codex SDK implementation
 - `test-mock.mjs` - Test suite for mock implementation
+- `playwright.config.mjs` - E2E test config
 - `package.json` - Dependencies and scripts
 
 ## Notes
