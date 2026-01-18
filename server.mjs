@@ -21,32 +21,53 @@ const html = `<!doctype html>
 <meta charset=utf-8>
 <title>Codex WebSocket UI</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    color-scheme: dark;
+    --bg: #0f1319;
+    --bg-elev: rgba(18, 24, 33, 0.92);
+    --bg-elev-strong: #151b24;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #8eca9d;
+    --accent-strong: #7ab78c;
+    --danger: #f48771;
+    --code-bg: #0d1117;
+    --code-text: #e6edf3;
+    --border: rgba(138, 202, 157, 0.25);
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #1e1e1e;
-    color: #d4d4d4;
+    font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    background: radial-gradient(1200px 800px at 10% -10%, rgba(138, 202, 157, 0.12), transparent 50%),
+      radial-gradient(900px 700px at 90% 0%, rgba(87, 120, 170, 0.18), transparent 55%),
+      linear-gradient(160deg, #0b0f14 0%, #111722 55%, #0f1319 100%);
+    color: var(--text);
     height: 100vh;
     display: flex;
     flex-direction: column;
   }
   .header {
-    background: #2d2d30;
-    padding: 1rem;
-    border-bottom: 1px solid #3e3e42;
+    background: var(--bg-elev);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: var(--shadow);
   }
   .header h1 {
-    font-size: 1.2rem;
-    font-weight: 500;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
   .status {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
+    color: var(--text-muted);
   }
   .thread-controls {
     display: flex;
@@ -54,43 +75,48 @@ const html = `<!doctype html>
     gap: 0.5rem;
   }
   .thread-selector {
-    background: #3c3c3c;
-    border: 1px solid #3e3e42;
-    color: #d4d4d4;
-    padding: 0.4rem 0.6rem;
-    border-radius: 4px;
+    background: var(--bg-elev-strong);
+    border: 1px solid transparent;
+    color: var(--text);
+    padding: 0.4rem 0.65rem;
+    border-radius: 6px;
     font-size: 0.8rem;
     cursor: pointer;
     max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: border-color 0.2s ease, transform 0.2s ease;
   }
   .thread-selector:hover {
-    border-color: #007acc;
+    border-color: var(--accent);
+    transform: translateY(-1px);
   }
   .new-thread-btn {
-    background: #0e639c;
+    background: var(--accent);
     border: none;
-    color: white;
-    padding: 0.4rem 0.8rem;
-    border-radius: 4px;
+    color: #0d1117;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
     cursor: pointer;
     font-size: 0.8rem;
-    font-weight: 500;
-    transition: background 0.2s;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s;
   }
   .new-thread-btn:hover {
-    background: #1177bb;
+    background: var(--accent-strong);
+    transform: translateY(-1px);
   }
   .status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #4ec9b0;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(138, 202, 157, 0.6);
   }
   .status-dot.disconnected {
-    background: #f48771;
+    background: var(--danger);
+    box-shadow: 0 0 8px rgba(244, 135, 113, 0.6);
   }
   .main {
     flex: 1;
@@ -98,20 +124,24 @@ const html = `<!doctype html>
     flex-direction: column;
     overflow: hidden;
   }
-  #output {
+  .output-scroll {
     flex: 1;
-    padding: 1rem;
     overflow-y: auto;
-    font-family: "Consolas", "Monaco", "Courier New", monospace;
-    font-size: 0.9rem;
-    line-height: 1.6;
+    padding: 1.5rem;
+  }
+  #output {
+    width: min(100%, 8in);
+    margin: 0 auto;
+    font-size: 1.05rem;
+    line-height: 1.65;
     white-space: pre-wrap;
     word-wrap: break-word;
   }
   .input-area {
-    background: #2d2d30;
-    border-top: 1px solid #3e3e42;
-    padding: 1rem;
+    background: var(--bg-elev);
+    border-top: 1px solid var(--border);
+    padding: 1rem 1.5rem 1.4rem;
+    box-shadow: var(--shadow);
   }
   #form {
     display: flex;
@@ -119,47 +149,52 @@ const html = `<!doctype html>
   }
   #prompt {
     flex: 1;
-    padding: 0.75rem;
-    background: #3c3c3c;
-    border: 1px solid #3e3e42;
-    color: #d4d4d4;
-    border-radius: 4px;
-    font-size: 0.95rem;
+    padding: 0.85rem 1rem;
+    background: var(--bg-elev-strong);
+    border: 1px solid transparent;
+    color: var(--text);
+    border-radius: 10px;
+    font-size: 1rem;
     font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   #prompt:focus {
     outline: none;
-    border-color: #007acc;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(138, 202, 157, 0.2);
   }
   button {
-    padding: 0.75rem 1.5rem;
-    background: #0e639c;
+    padding: 0.75rem 1.6rem;
+    background: var(--accent);
     border: none;
-    color: white;
-    border-radius: 4px;
+    color: #0d1117;
+    border-radius: 999px;
     cursor: pointer;
     font-size: 0.95rem;
-    font-weight: 500;
-    transition: background 0.2s;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s;
   }
   button:hover {
-    background: #1177bb;
+    background: var(--accent-strong);
+    transform: translateY(-1px);
   }
   button:active {
-    background: #0d5a8f;
+    background: var(--accent);
+    transform: translateY(0);
   }
   button:disabled {
-    background: #555;
+    background: #44505d;
+    color: rgba(230, 237, 243, 0.6);
     cursor: not-allowed;
   }
   .message {
-    margin-bottom: 1rem;
+    margin-bottom: 1.1rem;
   }
   .message.user {
-    color: #4ec9b0;
+    color: var(--accent);
   }
   .message.assistant {
-    color: #9cdcfe;
+    color: #c9e6ff;
   }
   .message.reasoning {
     color: #dcdcaa;
@@ -167,30 +202,68 @@ const html = `<!doctype html>
   }
   .message.command {
     color: #ce9178;
+    font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
   }
   .message.file-change {
     color: #c586c0;
   }
   .message.error {
-    color: #f48771;
+    color: var(--danger);
   }
   .message.todo {
     color: #b5cea8;
   }
   .message.usage {
-    color: #808080;
+    color: var(--text-muted);
     font-size: 0.85rem;
   }
   .event-type {
     font-weight: 600;
     margin-right: 0.5rem;
   }
+  pre, code {
+    font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 10px;
+  }
+  pre {
+    padding: 1rem;
+    overflow-x: auto;
+    border: 1px solid rgba(138, 202, 157, 0.18);
+  }
+  code {
+    padding: 0.1rem 0.35rem;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+  @media (max-width: 700px) {
+    .header {
+      padding: 0.9rem 1rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+    .output-scroll {
+      padding: 1rem;
+    }
+    #form {
+      flex-direction: column;
+    }
+    button,
+    .new-thread-btn {
+      width: 100%;
+    }
+  }
   ${MOCK_MODE ? `
   .mock-badge {
     background: #ce9178;
     color: #1e1e1e;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
   }
@@ -213,7 +286,9 @@ const html = `<!doctype html>
     </div>
   </div>
   <div class="main">
-    <div id="output"></div>
+    <div class="output-scroll">
+      <div id="output"></div>
+    </div>
     <div class="input-area">
       <form id="form">
         <input 
