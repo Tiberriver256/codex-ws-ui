@@ -13,6 +13,8 @@ class CustomWorld {
     this.pendingThreadIds = null;
     this.selectedModel = null;
     this.selectedReasoning = null;
+    this.structuredSchema = null;
+    this.structuredOutput = null;
   }
 }
 

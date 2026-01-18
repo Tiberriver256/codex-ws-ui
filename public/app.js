@@ -35,6 +35,7 @@ const uiRenderer = createUiRenderer(output);
 const { addMessage, addSystemMessage } = uiRenderer;
 const form = $("#form");
 const promptInput = $("#prompt");
+const schemaInput = $("#structuredSchema");
 const submitBtn = form.querySelector("button");
 const statusDot = $("#statusDot");
 const statusText = $("#statusText");
@@ -232,6 +233,9 @@ window.__TEST__.setRestricted = (value) => {
 window.__TEST__.setHeadless = (value) => {
   authPanelController.setHeadless(value);
 };
+window.__TEST__.emitStructuredOutput = (data) => {
+  uiRenderer.addStructuredOutput(data, { title: "Structured Output" });
+};
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
@@ -246,17 +250,25 @@ if (execpolicyPanelBtn) {
   execpolicyPanelBtn.addEventListener("click", () => execpolicyPanelController.open());
 }
 
+const testState = window.__TEST__;
 let wsSend = () => {};
+const sendWithCapture = (payload) => {
+  if (testState) {
+    testState.lastSentPayload = payload;
+  }
+  wsSend(payload);
+};
 const uiActions = createUiActions({
   threadState,
   threadOptions,
   uiRenderer,
-  sendMessage: (payload) => wsSend(payload),
+  sendMessage: sendWithCapture,
   modal,
   approvalUi,
   approvalRules: approvalRulesStore,
   persistState: persistThreadState,
-  onUsage: (usage) => statusPanelController.setUsage(usage)
+  onUsage: (usage) => statusPanelController.setUsage(usage),
+  schemaInput
 });
 
 const wsClient = createWsClient({

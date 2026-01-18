@@ -7,11 +7,24 @@ export function createUiActions({
   approvalUi,
   approvalRules,
   persistState,
-  onUsage
+  onUsage,
+  schemaInput
 }) {
-  const { addMessage, addSystemMessage, handleItem } = uiRenderer;
+  const { addMessage, addSystemMessage, addStructuredOutput, handleItem } = uiRenderer;
   const defaultThreadOptions = threadOptions.getDefaultOptions();
   const persist = typeof persistState === "function" ? persistState : () => {};
+  const pendingStructuredOutputs = [];
+
+  function readStructuredSchema() {
+    if (!schemaInput) return { schema: null, raw: "" };
+    const raw = schemaInput.value.trim();
+    if (!raw) return { schema: null, raw: "" };
+    try {
+      return { schema: JSON.parse(raw), raw };
+    } catch (error) {
+      return { schema: null, raw, error };
+    }
+  }
 
   async function confirmDangerousSandbox() {
     if (modal?.confirm) {
@@ -178,11 +191,23 @@ export function createUiActions({
 
       case "turn.failed":
         addMessage(`❌ Turn failed: ${event.error.message}`, "error");
+        pendingStructuredOutputs.length = 0;
         break;
 
       case "item.started":
       case "item.updated":
       case "item.completed":
+        if (event.item?.type === "agent_message" && pendingStructuredOutputs.length > 0) {
+          if (event.type === "item.completed") {
+            pendingStructuredOutputs.shift();
+            let payload = event.item.text;
+            try {
+              payload = JSON.parse(event.item.text);
+            } catch {}
+            addStructuredOutput(payload, { title: "Structured Output" });
+          }
+          break;
+        }
         handleItem(event);
         break;
 
@@ -254,9 +279,23 @@ export function createUiActions({
       const value = promptInput.value.trim();
       if (!value) return;
 
+      const schemaResult = readStructuredSchema();
+      if (schemaResult.error) {
+        addMessage("❌ Invalid JSON schema. Fix it before sending.", "error");
+        return;
+      }
+
       addMessage(`> ${value}`, "user");
-      sendMessage({ type: "message", text: value });
+      const payload = { type: "message", text: value };
+      if (schemaResult.schema) {
+        payload.outputSchema = schemaResult.schema;
+        pendingStructuredOutputs.push(true);
+      }
+      sendMessage(payload);
       promptInput.value = "";
+      if (schemaInput) {
+        schemaInput.value = "";
+      }
       promptInput.focus();
     };
 

@@ -240,7 +240,7 @@ wss.on("connection", (ws) => {
   const gitRepoRootByCwd = new Map(); // cwd -> repo root (or null)
 
   // Helper function to handle message processing
-  async function processMessage(prompt) {
+  async function processMessage(prompt, turnOptions = {}) {
     // Create initial thread if none exists
     if (!currentThread) {
       const autoOptions = { skipGitRepoCheck: true };
@@ -253,7 +253,7 @@ wss.on("connection", (ws) => {
     console.log(`Received on thread ${currentThreadId || '(pending)'}: ${prompt}`);
     
     // Use the enhanced event streaming
-    const { events } = await currentThread.runStreamed(prompt);
+    const { events } = await currentThread.runStreamed(prompt, turnOptions);
     
     for await (const event of events) {
       if ((event.type === "item.started" || event.type === "item.completed") && event.item?.type === "file_change") {
@@ -443,7 +443,13 @@ wss.on("connection", (ws) => {
         }));
       } else if (message.type === "message") {
         // Handle regular message
-        await processMessage(message.text);
+        const turnOptions = {};
+        if (message.outputSchema) {
+          turnOptions.outputSchema = message.outputSchema;
+        } else if (message.output_schema) {
+          turnOptions.outputSchema = message.output_schema;
+        }
+        await processMessage(message.text, turnOptions);
       } else {
         ws.send(JSON.stringify({
           type: "error",

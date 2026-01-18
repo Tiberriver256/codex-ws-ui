@@ -1,3 +1,5 @@
+import { createStructuredOutputCard } from "./structured-output.js";
+
 export function createUiRenderer(output) {
   const agentMessageDivs = new Map();
 
@@ -18,6 +20,11 @@ export function createUiRenderer(output) {
 
   function addSystemMessage(text, type = "assistant") {
     addMessage("ℹ️  " + text, type);
+  }
+
+  function addStructuredOutput(data, options = {}) {
+    const card = createStructuredOutputCard({ data, title: options.title });
+    addMessage(card, "structured-output");
   }
 
   function handleItem(event) {
@@ -124,5 +131,5 @@ export function createUiRenderer(output) {
     }
   }
 
-  return { addMessage, addSystemMessage, handleItem };
+  return { addMessage, addSystemMessage, addStructuredOutput, handleItem };
 }

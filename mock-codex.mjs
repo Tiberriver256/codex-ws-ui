@@ -565,7 +565,9 @@ class MockThread {
 
     // Agent message (final response)
     const messageId = `msg_${Date.now()}`;
-    const response = this.generateResponse(input);
+    const response = turnOptions?.outputSchema
+      ? JSON.stringify(this.generateStructuredOutput(input, turnOptions))
+      : this.generateResponse(input);
     
     yield {
       type: "item.started",
@@ -705,6 +707,21 @@ class MockThread {
     
     // Default response
     return `I received your message: "${input}". This is a mock response showing how the Codex SDK streams events. The real SDK would provide actual AI-powered assistance for coding tasks.`;
+  }
+
+  /**
+   * Generates a structured output payload when schema is provided
+   * @param {string} input
+   * @param {TurnOptions} turnOptions
+   * @returns {Object}
+   */
+  generateStructuredOutput(input, turnOptions = {}) {
+    const preview = String(input).slice(0, 120);
+    return {
+      status: "ok",
+      echo: preview,
+      schemaProvided: Boolean(turnOptions.outputSchema)
+    };
   }
 
   /**

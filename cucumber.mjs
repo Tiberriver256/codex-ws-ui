@@ -10,6 +10,7 @@ export default {
       'features/status-panel.feature',
       'features/auth.feature',
       'features/sessions.feature',
+      'features/structured-output.feature',
     ],
     import: [
       'features/step-definitions/**/*.mjs',
