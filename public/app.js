@@ -10,6 +10,9 @@ import { loadThreadState, saveThreadState } from "./thread-storage.js";
 import { createApprovalRulesStore } from "./approval-rules.js";
 import { createApprovalUi } from "./approval-ui.js";
 import { createExecPolicyPanel } from "./execpolicy-panel.js";
+import { createCommandPalette } from "./command-palette.js";
+import { createChangesStore } from "./changes-store.js";
+import { createDiffPanel, createReviewPanel } from "./changes-panels.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -92,6 +95,23 @@ const execpolicyRulesEmpty = $("#execpolicyRulesEmpty");
 const execpolicyPreviewInput = $("#execpolicyPreviewInput");
 const execpolicyPreviewResult = $("#execpolicyPreviewResult");
 const execpolicyPreviewBtn = $("#execpolicyPreviewBtn");
+const commandPaletteBtn = $("#commandPaletteBtn");
+const commandPaletteOverlay = $("#commandPalette");
+const closeCommandPaletteBtn = $("#closeCommandPaletteBtn");
+const commandPaletteInput = $("#commandPaletteInput");
+const commandPaletteList = $("#commandPaletteList");
+const commandPaletteAdvanced = $("#commandPaletteAdvanced");
+const commandPaletteAdvancedList = $("#commandPaletteAdvancedList");
+const diffPanel = $("#diffPanel");
+const closeDiffBtn = $("#closeDiffBtn");
+const diffList = $("#diffList");
+const diffEmpty = $("#diffEmpty");
+const reviewPanel = $("#reviewPanel");
+const closeReviewBtn = $("#closeReviewBtn");
+const reviewSummary = $("#reviewSummary");
+const reviewFiles = $("#reviewFiles");
+const reviewEmpty = $("#reviewEmpty");
+const applyResult = $("#applyResult");
 
 const threadState = createThreadState({ outputEl: output, threadSelector });
 const modal = createModalController({
@@ -134,6 +154,7 @@ const sessionsStore = createSessionsStore({
   workspaceRoot: appConfig.workspaceRoot || ""
 });
 const approvalRulesStore = createApprovalRulesStore();
+const changesStore = createChangesStore();
 const approvalUi = createApprovalUi({ uiRenderer, rulesStore: approvalRulesStore });
 const imageInput = createImageInput({
   inputEl: imageFileInput,
@@ -216,6 +237,24 @@ const execpolicyPanelController = createExecPolicyPanel({
   }
 });
 
+const diffPanelController = createDiffPanel({
+  panel: diffPanel,
+  closeBtn: closeDiffBtn,
+  listEl: diffList,
+  emptyEl: diffEmpty,
+  changesStore
+});
+
+const reviewPanelController = createReviewPanel({
+  panel: reviewPanel,
+  closeBtn: closeReviewBtn,
+  summaryEl: reviewSummary,
+  listEl: reviewFiles,
+  emptyEl: reviewEmpty,
+  applyResultEl: applyResult,
+  changesStore
+});
+
 authStore.subscribe(() => statusPanelController.refresh());
 
 threadOptions.bindFormEvents();
@@ -248,6 +287,10 @@ window.__TEST__.setHeadless = (value) => {
 window.__TEST__.emitStructuredOutput = (data) => {
   uiRenderer.addStructuredOutput(data, { title: "Structured Output" });
 };
+window.__TEST__.setLocalChanges = (value) => {
+  changesStore.setLocalChanges(value);
+};
+window.__TEST__.hasLocalChanges = () => changesStore.hasLocalChanges();
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
@@ -282,6 +325,74 @@ const uiActions = createUiActions({
   onUsage: (usage) => statusPanelController.setUsage(usage),
   schemaInput,
   imageInput
+});
+
+function openModelSelector() {
+  const currentThreadId = threadState.getCurrentThreadId();
+  if (!currentThreadId) {
+    threadOptions.openOptionsPanel("create", threadOptions.getDefaultOptions());
+  } else {
+    threadOptions.openOptionsPanel(
+      "update",
+      threadOptions.getThreadOptions(currentThreadId) || threadOptions.getDefaultOptions()
+    );
+  }
+  if (threadModel) threadModel.focus();
+}
+
+function handleNewThreadCommand() {
+  sendWithCapture({ type: "new_thread", options: threadOptions.getDefaultOptions() });
+}
+
+async function handleApplyCommand() {
+  if (!changesStore.hasLocalChanges()) {
+    reviewPanelController.setApplyResult("No local changes to apply.");
+    reviewPanelController.open();
+    return;
+  }
+  const changes = changesStore.getChanges();
+  const confirm = await modal.confirm({
+    title: "Apply changes",
+    message: `Apply ${changes.length} file${changes.length === 1 ? "" : "s"}?`,
+    confirmLabel: "Apply",
+    cancelLabel: "Cancel"
+  });
+  if (!confirm) return;
+  reviewPanelController.setApplyResult("Changes applied.");
+  reviewPanelController.open();
+  addSystemMessage("Changes applied.");
+}
+
+const commandPalette = createCommandPalette({
+  overlay: commandPaletteOverlay,
+  closeBtn: closeCommandPaletteBtn,
+  input: commandPaletteInput,
+  listEl: commandPaletteList,
+  advancedDetails: commandPaletteAdvanced,
+  advancedListEl: commandPaletteAdvancedList,
+  commands: [
+    { value: "/model", label: "/model", description: "Open model selector", action: openModelSelector },
+    { value: "/status", label: "/status", description: "Open status panel", action: () => statusPanelController.open() },
+    { value: "/new", label: "/new", description: "Create new thread", action: handleNewThreadCommand },
+    { value: "/resume", label: "/resume", description: "Open sessions panel", action: () => sessionsPanelController.open() }
+  ],
+  advancedCommands: [
+    { value: "/diff", label: "/diff", description: "View latest diff", action: () => diffPanelController.open() },
+    { value: "/review", label: "/review", description: "Review changes", action: () => reviewPanelController.open() },
+    { value: "/apply", label: "/apply", description: "Apply changes", action: handleApplyCommand }
+  ]
+});
+
+if (commandPaletteBtn) {
+  commandPaletteBtn.addEventListener("click", () => commandPalette.open());
+}
+
+document.addEventListener("keydown", (event) => {
+  const key = event.key ? event.key.toLowerCase() : "";
+  if ((event.metaKey || event.ctrlKey) && key === "k") {
+    event.preventDefault();
+    commandPalette.open();
+  }
 });
 
 const appServerClient = createAppServerClient({

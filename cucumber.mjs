@@ -13,6 +13,8 @@ export default {
       'features/sessions.feature',
       'features/structured-output.feature',
       'features/images.feature',
+      'features/command-palette.feature',
+      'features/review-apply.feature',
     ],
     import: [
       'features/step-definitions/**/*.mjs',

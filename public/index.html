@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="/approvals.css">
 <link rel="stylesheet" href="/structured-output.css">
 <link rel="stylesheet" href="/image-input.css">
+<link rel="stylesheet" href="/palette.css">
+<link rel="stylesheet" href="/changes.css">
 </head>
 <body>
   <div class="header">
@@ -22,6 +24,7 @@
         <span id="threadOptionsSummary" class="thread-options-summary">Defaults</span>
       </div>
       <div class="panel-controls">
+        <button type="button" id="commandPaletteBtn" class="ghost-btn">Commands</button>
         <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
         <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
@@ -319,6 +322,67 @@
           <button type="button" id="execpolicyPreviewBtn" class="ghost-btn">Check</button>
         </div>
         <div class="panel-note execpolicy-preview" id="execpolicyPreviewResult">Enter an action to preview.</div>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="diffPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Diff</h2>
+          <p>Local changes ready to inspect.</p>
+        </div>
+        <button type="button" id="closeDiffBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-note" id="diffEmpty" hidden>No local changes.</div>
+        <div class="diff-list" id="diffList"></div>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="reviewPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Review</h2>
+          <p>Summarize changes before applying.</p>
+        </div>
+        <button type="button" id="closeReviewBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-note" id="reviewEmpty" hidden>No local changes.</div>
+        <div class="panel-note review-summary" id="reviewSummary"></div>
+        <div class="review-list" id="reviewFiles"></div>
+        <div class="panel-note apply-result" id="applyResult" hidden></div>
+      </div>
+    </div>
+  </div>
+  <div class="palette-overlay" id="commandPalette" hidden aria-hidden="true">
+    <div class="palette-card" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
+      <div class="palette-header">
+        <div>
+          <h2 id="commandPaletteTitle">Command Palette</h2>
+          <p>Jump to power features with slash commands.</p>
+        </div>
+        <button type="button" id="closeCommandPaletteBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="palette-body">
+        <input
+          id="commandPaletteInput"
+          class="palette-input"
+          placeholder="Type a command (ex: /status)"
+          autocomplete="off"
+        >
+        <div class="palette-section">
+          <h3>Commands</h3>
+          <div class="palette-list" id="commandPaletteList"></div>
+        </div>
+        <details class="palette-advanced" id="commandPaletteAdvanced">
+          <summary>Advanced</summary>
+          <div class="palette-section">
+            <div class="palette-list" id="commandPaletteAdvancedList"></div>
+          </div>
+        </details>
       </div>
     </div>
   </div>
