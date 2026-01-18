@@ -1,10 +1,11 @@
 # Codex WebSocket UI
 
-Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Streams AI agent responses over WebSockets with rich event handling.
+Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Streams AI agent responses over WebSockets with rich event handling and **multiple thread support**.
 
 ## Features
 
 - ✨ **Real-time streaming** - See agent responses as they're generated
+- 🧵 **Multiple threads** - Create and switch between multiple conversation threads
 - 🎨 **Rich UI** - Visual representation of different event types (reasoning, commands, file changes, todos)
 - 🧪 **Mock mode** - Test without API key using realistic simulations
 - 📊 **Event visualization** - See todos, reasoning, command execution, and file changes
@@ -56,10 +57,24 @@ Open `http://127.0.0.1:8080` in your browser.
 ### `server-enhanced.mjs` (New)
 - Enhanced UI with event visualization
 - Supports **mock mode** with `CODEX_MOCK=1`
+- **Multiple thread support** - Create, switch, and manage multiple conversation threads
 - Rich event handling (todos, reasoning, commands, file changes)
 - Better error handling
 - Visual status indicators
 - No API key required in mock mode
+
+## Multiple Threads
+
+The enhanced server supports multiple independent conversation threads:
+- **Create new threads** - Click "+ New Thread" to start a fresh conversation
+- **Switch between threads** - Use the dropdown to switch between threads
+- **Preserved history** - Each thread maintains its own conversation history
+- **Thread persistence** - Threads persist during the WebSocket connection
+
+This allows you to:
+- Work on multiple tasks simultaneously
+- Compare different approaches
+- Keep separate contexts for different topics
 
 ## Mock Mode
 

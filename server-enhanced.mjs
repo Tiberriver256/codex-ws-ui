@@ -52,6 +52,41 @@ const html = `<!doctype html>
     gap: 0.5rem;
     font-size: 0.85rem;
   }
+  .thread-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .thread-selector {
+    background: #3c3c3c;
+    border: 1px solid #3e3e42;
+    color: #d4d4d4;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .thread-selector:hover {
+    border-color: #007acc;
+  }
+  .new-thread-btn {
+    background: #0e639c;
+    border: none;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  .new-thread-btn:hover {
+    background: #1177bb;
+  }
   .status-dot {
     width: 8px;
     height: 8px;
@@ -171,6 +206,12 @@ const html = `<!doctype html>
     <h1>Codex WebSocket UI</h1>
     <div class="status">
       ${MOCK_MODE ? '<span class="mock-badge">MOCK MODE</span>' : ''}
+      <div class="thread-controls">
+        <select id="threadSelector" class="thread-selector" disabled>
+          <option value="">No thread</option>
+        </select>
+        <button id="newThreadBtn" class="new-thread-btn" disabled>+ New Thread</button>
+      </div>
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Connecting...</span>
     </div>
@@ -197,9 +238,14 @@ const html = `<!doctype html>
     const submitBtn = form.querySelector("button");
     const statusDot = $("#statusDot");
     const statusText = $("#statusText");
+    const threadSelector = $("#threadSelector");
+    const newThreadBtn = $("#newThreadBtn");
     
     let ws;
     let currentMessageDiv = null;
+    let threads = [];
+    let currentThreadId = null;
+    let threadOutputs = new Map(); // Store output for each thread
     
     function connect() {
       ws = new WebSocket("ws://127.0.0.1:8080");
@@ -209,6 +255,8 @@ const html = `<!doctype html>
         statusText.textContent = "Connected";
         promptInput.disabled = false;
         submitBtn.disabled = false;
+        threadSelector.disabled = false;
+        newThreadBtn.disabled = false;
         promptInput.focus();
         addSystemMessage("Connected to server");
       };
@@ -218,6 +266,8 @@ const html = `<!doctype html>
         statusText.textContent = "Disconnected";
         promptInput.disabled = true;
         submitBtn.disabled = true;
+        threadSelector.disabled = true;
+        newThreadBtn.disabled = true;
         addSystemMessage("Disconnected from server");
       };
       
@@ -236,9 +286,73 @@ const html = `<!doctype html>
       };
     }
     
+    function saveCurrentOutput() {
+      if (currentThreadId) {
+        threadOutputs.set(currentThreadId, output.innerHTML);
+      }
+    }
+    
+    function loadThreadOutput(threadId) {
+      if (threadOutputs.has(threadId)) {
+        output.innerHTML = threadOutputs.get(threadId);
+      } else {
+        output.innerHTML = "";
+      }
+      output.scrollTop = output.scrollHeight;
+    }
+    
+    function updateThreadSelector() {
+      const currentValue = threadSelector.value;
+      threadSelector.innerHTML = '<option value="">Select a thread...</option>';
+      
+      threads.forEach(threadId => {
+        const option = document.createElement("option");
+        option.value = threadId;
+        option.textContent = threadId.substring(0, 25) + "...";
+        if (threadId === currentThreadId) {
+          option.selected = true;
+        }
+        threadSelector.appendChild(option);
+      });
+    }
+    
+    function createNewThread() {
+      saveCurrentOutput();
+      ws.send(JSON.stringify({ type: "new_thread" }));
+    }
+    
+    function switchThread(threadId) {
+      if (threadId && threadId !== currentThreadId) {
+        saveCurrentOutput();
+        currentThreadId = threadId;
+        loadThreadOutput(threadId);
+        ws.send(JSON.stringify({ type: "switch_thread", thread_id: threadId }));
+      }
+    }
+    
     function handleEvent(event) {
       switch (event.type) {
+        case "thread_created":
+          currentThreadId = event.thread_id;
+          if (!threads.includes(currentThreadId)) {
+            threads.push(currentThreadId);
+          }
+          threadOutputs.set(currentThreadId, "");
+          output.innerHTML = "";
+          updateThreadSelector();
+          addSystemMessage(\`✨ New thread created: \${event.thread_id}\`);
+          break;
+          
+        case "thread_switched":
+          addSystemMessage(\`🔄 Switched to thread: \${event.thread_id}\`);
+          break;
+          
         case "thread.started":
+          if (!threads.includes(event.thread_id)) {
+            threads.push(event.thread_id);
+            currentThreadId = event.thread_id;
+            updateThreadSelector();
+          }
           addSystemMessage(\`Thread started: \${event.thread_id}\`);
           break;
           
@@ -359,9 +473,20 @@ const html = `<!doctype html>
       if (!value) return;
       
       addMessage(\`> \${value}\`, "user");
-      ws.send(value);
+      ws.send(JSON.stringify({ type: "message", text: value }));
       promptInput.value = "";
       promptInput.focus();
+    };
+    
+    newThreadBtn.onclick = () => {
+      createNewThread();
+    };
+    
+    threadSelector.onchange = (ev) => {
+      const threadId = ev.target.value;
+      if (threadId) {
+        switchThread(threadId);
+      }
     };
     
     connect();
@@ -379,21 +504,105 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => {
   console.log("Client connected");
   const codex = new Codex();
-  const thread = codex.startThread({ skipGitRepoCheck: true });
+  const threads = new Map(); // Store multiple threads
+  let currentThreadId = null;
 
   ws.on("message", async (m) => {
     try {
-      const prompt = m.toString();
-      console.log(`Received: ${prompt}`);
+      const message = JSON.parse(m.toString());
       
-      // Use the enhanced event streaming
-      const { events } = await thread.runStreamed(prompt);
-      
-      for await (const event of events) {
-        // Send the full event as JSON for rich client handling
-        ws.send(JSON.stringify(event));
+      // Handle different message types
+      if (message.type === "new_thread") {
+        // Create a new thread
+        const thread = codex.startThread({ skipGitRepoCheck: true });
+        currentThreadId = thread.id;
+        threads.set(currentThreadId, thread);
+        console.log(`Created new thread: ${currentThreadId}`);
+        
+        ws.send(JSON.stringify({
+          type: "thread_created",
+          thread_id: currentThreadId
+        }));
+      } else if (message.type === "switch_thread") {
+        // Switch to an existing thread
+        const threadId = message.thread_id;
+        if (threads.has(threadId)) {
+          currentThreadId = threadId;
+          console.log(`Switched to thread: ${threadId}`);
+          ws.send(JSON.stringify({
+            type: "thread_switched",
+            thread_id: currentThreadId
+          }));
+        } else {
+          ws.send(JSON.stringify({
+            type: "error",
+            message: `Thread ${threadId} not found`
+          }));
+        }
+      } else if (message.type === "list_threads") {
+        // List all available threads
+        const threadList = Array.from(threads.keys());
+        ws.send(JSON.stringify({
+          type: "threads_list",
+          threads: threadList,
+          current: currentThreadId
+        }));
+      } else if (message.type === "message" || typeof message === "string") {
+        // Handle regular message
+        const prompt = message.type === "message" ? message.text : message;
+        
+        // Create initial thread if none exists
+        if (!currentThreadId) {
+          const thread = codex.startThread({ skipGitRepoCheck: true });
+          currentThreadId = thread.id;
+          threads.set(currentThreadId, thread);
+          console.log(`Auto-created thread: ${currentThreadId}`);
+        }
+        
+        const thread = threads.get(currentThreadId);
+        console.log(`Received on thread ${currentThreadId}: ${prompt}`);
+        
+        // Use the enhanced event streaming
+        const { events } = await thread.runStreamed(prompt);
+        
+        for await (const event of events) {
+          // Send the full event as JSON for rich client handling
+          ws.send(JSON.stringify(event));
+        }
+      } else {
+        ws.send(JSON.stringify({
+          type: "error",
+          message: `Unknown message type: ${message.type}`
+        }));
       }
     } catch (err) {
+      // Fallback for plain text messages (backward compatibility)
+      if (typeof m.toString() === "string" && !m.toString().startsWith("{")) {
+        try {
+          const prompt = m.toString();
+          
+          // Create initial thread if none exists
+          if (!currentThreadId) {
+            const thread = codex.startThread({ skipGitRepoCheck: true });
+            currentThreadId = thread.id;
+            threads.set(currentThreadId, thread);
+            console.log(`Auto-created thread: ${currentThreadId}`);
+          }
+          
+          const thread = threads.get(currentThreadId);
+          console.log(`Received: ${prompt}`);
+          
+          const { events } = await thread.runStreamed(prompt);
+          
+          for await (const event of events) {
+            ws.send(JSON.stringify(event));
+          }
+          return;
+        } catch (fallbackErr) {
+          console.error("Fallback error:", fallbackErr);
+        }
+      }
+      
       console.error("Error:", err);
       ws.send(JSON.stringify({
         type: "error",
