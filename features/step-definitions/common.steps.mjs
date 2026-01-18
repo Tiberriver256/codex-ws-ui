@@ -11,8 +11,10 @@ async function ensureOptionsPanelOpen(world) {
   }
 }
 
-Given('the app is running in mock mode', function () {
-  expect(String(this.parameters?.mock || '')).not.toBe('');
+Given('the app is running in mock mode', async function () {
+  await openApp(this);
+  const mockMode = await this.page.evaluate(() => window.__APP_CONFIG__?.mockMode);
+  expect(mockMode).toBeTruthy();
 });
 
 Given('I am connected', async function () {

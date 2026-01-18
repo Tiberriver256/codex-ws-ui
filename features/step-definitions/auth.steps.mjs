@@ -14,6 +14,7 @@ Given('I am logged in', async function () {
   await this.page.locator('#authApiKeyInput').fill('sk-test-1234');
   await this.page.locator('#authApiKeySubmit').click();
   await expect(this.page.locator('#authStatusText')).toContainText('Logged in');
+  await this.page.locator('#closeAuthBtn').click();
 });
 
 Given('I am in a headless environment', async function () {
