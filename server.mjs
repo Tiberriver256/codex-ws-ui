@@ -98,9 +98,17 @@ const modelCatalog = MOCK_MODE ? mockModelCatalog : await fetchCodexModels();
 
 // Static asset serving
 const publicDir = path.resolve(process.cwd(), "public");
+const workspaceRoot = process.cwd();
+let isGitRepo = false;
+try {
+  await fs.stat(path.join(workspaceRoot, ".git"));
+  isGitRepo = true;
+} catch {}
 const appConfig = {
   mockMode: MOCK_MODE,
   modelCatalog,
+  workspaceRoot,
+  isGitRepo,
 };
 const appConfigScript = `window.__APP_CONFIG__ = ${JSON.stringify(appConfig).replace(/</g, "\u003c")};`;
 

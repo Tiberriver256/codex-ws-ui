@@ -2,10 +2,54 @@ export function createUiActions({
   threadState,
   threadOptions,
   uiRenderer,
-  sendMessage
+  sendMessage,
+  modal,
+  persistState
 }) {
   const { addMessage, addSystemMessage, handleItem } = uiRenderer;
   const defaultThreadOptions = threadOptions.getDefaultOptions();
+  const persist = typeof persistState === "function" ? persistState : () => {};
+
+  async function confirmDangerousSandbox() {
+    if (modal?.confirm) {
+      return modal.confirm({
+        title: "Danger: Full Access",
+        message: "This grants full file system access. Proceed?",
+        confirmLabel: "I Understand",
+        cancelLabel: "Cancel"
+      });
+    }
+    return window.confirm("This grants full file system access. Proceed?");
+  }
+
+  async function promptNetworkBlocked() {
+    if (modal?.open) {
+      return modal.open({
+        title: "Network Access Required",
+        message: "Network is off for this thread. Re-enable to continue?",
+        actions: [
+          { label: "Cancel", value: "cancel", variant: "ghost" },
+          { label: "Enable Network", value: "enable" }
+        ]
+      });
+    }
+    return window.confirm("Network is off for this thread. Re-enable?") ? "enable" : "cancel";
+  }
+
+  async function promptApprovalRequest() {
+    if (modal?.open) {
+      return modal.open({
+        title: "Approval Required",
+        message: "This action requires approval.",
+        actions: [
+          { label: "Deny", value: "deny", variant: "ghost" },
+          { label: "Approve", value: "approve" },
+          { label: "Always Allow", value: "always" }
+        ]
+      });
+    }
+    return window.confirm("Approve this action?") ? "approve" : "deny";
+  }
 
   function createNewThread(options = {}) {
     threadState.saveCurrentOutput();
@@ -16,6 +60,7 @@ export function createUiActions({
     if (threadState.switchThread(threadId)) {
       threadOptions.updateOptionsSummaryDisplay();
       sendMessage({ type: "switch_thread", thread_id: threadId });
+      persist();
     }
   }
 
@@ -33,11 +78,13 @@ export function createUiActions({
         if (event.options && Object.keys(event.options).length > 0) {
           addSystemMessage(`🔧 Thread options set: ${threadOptions.formatOptionsSummary(event.options)}`);
         }
+        persist();
         break;
 
       case "thread_switched":
         addSystemMessage(`🔄 Switched to thread: ${event.thread_id}`);
         threadOptions.updateOptionsSummaryDisplay();
+        persist();
         break;
 
       case "thread_id_assigned": {
@@ -51,6 +98,7 @@ export function createUiActions({
         threadState.updateThreadSelector();
         threadOptions.updateOptionsSummaryDisplay();
         addSystemMessage(`✅ Thread ID assigned: ${realId}`);
+        persist();
         break;
       }
 
@@ -74,18 +122,28 @@ export function createUiActions({
         }
         if (shouldAnnounce) {
           addSystemMessage(`Thread started: ${event.thread_id}`);
+          persist();
         }
         break;
       }
 
       case "thread_options_updated": {
+        const previousOptions = event.thread_id
+          ? threadOptions.getThreadOptions(event.thread_id)
+          : defaultThreadOptions;
+        const changes = threadOptions.diffOptions(previousOptions, event.options || defaultThreadOptions);
         if (event.thread_id) {
           threadOptions.setThreadOptions(event.thread_id, event.options || defaultThreadOptions);
           if (event.thread_id === threadState.getCurrentThreadId()) {
             threadOptions.updateOptionsSummaryDisplay();
           }
+          threadState.updateThreadSelector();
+        }
+        if (changes.length > 0) {
+          addSystemMessage(`🧭 Settings changed: ${changes.join(" • ")}`);
         }
         addSystemMessage(`🔧 Thread options updated: ${threadOptions.formatOptionsSummary(event.options)}`);
+        persist();
         break;
       }
 
@@ -129,7 +187,9 @@ export function createUiActions({
     threadOptionsBtn,
     closeOptionsBtn,
     resetOptionsBtn,
-    applyOptionsBtn
+    applyOptionsBtn,
+    networkActionBtn,
+    approvalActionBtn
   }) {
     newThreadBtn.addEventListener("click", () => {
       threadOptions.openOptionsPanel("create", defaultThreadOptions);
@@ -152,14 +212,25 @@ export function createUiActions({
       threadOptions.fillOptionsForm(defaultThreadOptions);
     });
 
-    applyOptionsBtn.addEventListener("click", () => {
+    applyOptionsBtn.addEventListener("click", async () => {
+      if (!threadOptions.validateForm()) return;
       const options = threadOptions.collectOptionsFromForm();
-      threadOptions.closeOptionsPanel();
       if (threadOptions.getOptionsPanelMode() === "create") {
+        if (threadOptions.requiresDangerConfirmation(defaultThreadOptions, options)) {
+          const confirmed = await confirmDangerousSandbox();
+          if (!confirmed) return;
+        }
+        threadOptions.closeOptionsPanel();
         createNewThread(options);
       } else {
         const currentThreadId = threadState.getCurrentThreadId();
         if (currentThreadId) {
+          const previousOptions = threadOptions.getThreadOptions(currentThreadId) || defaultThreadOptions;
+          if (threadOptions.requiresDangerConfirmation(previousOptions, options)) {
+            const confirmed = await confirmDangerousSandbox();
+            if (!confirmed) return;
+          }
+          threadOptions.closeOptionsPanel();
           sendMessage({ type: "update_thread_options", thread_id: currentThreadId, options });
         }
       }
@@ -182,6 +253,49 @@ export function createUiActions({
         switchThread(threadId);
       }
     };
+
+    if (networkActionBtn) {
+      networkActionBtn.addEventListener("click", async () => {
+        const currentThreadId = threadState.getCurrentThreadId();
+        if (!currentThreadId) {
+          addSystemMessage("No active thread to run network action.");
+          return;
+        }
+        const options = threadOptions.getThreadOptions(currentThreadId) || defaultThreadOptions;
+        if (options.networkAccessEnabled === false) {
+          const choice = await promptNetworkBlocked();
+          if (choice === "enable") {
+            const updated = { ...options, networkAccessEnabled: true };
+            sendMessage({ type: "update_thread_options", thread_id: currentThreadId, options: updated });
+          }
+          return;
+        }
+        addSystemMessage("✅ Network action permitted.");
+      });
+    }
+
+    if (approvalActionBtn) {
+      approvalActionBtn.addEventListener("click", async () => {
+        const currentThreadId = threadState.getCurrentThreadId();
+        if (!currentThreadId) {
+          addSystemMessage("No active thread to run approval action.");
+          return;
+        }
+        const options = threadOptions.getThreadOptions(currentThreadId) || defaultThreadOptions;
+        if (options.approvalPolicy === "on-request") {
+          const choice = await promptApprovalRequest();
+          if (choice === "approve") {
+            addSystemMessage("✅ Approval granted.");
+          } else if (choice === "always") {
+            addSystemMessage("✅ Approval granted (always allow).");
+          } else {
+            addSystemMessage("❌ Approval denied.");
+          }
+          return;
+        }
+        addSystemMessage("✅ Action completed without approval.");
+      });
+    }
   }
 
   return { bindUiActions, handleEvent };

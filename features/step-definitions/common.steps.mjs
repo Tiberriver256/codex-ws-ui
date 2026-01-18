@@ -2,6 +2,15 @@ import { Given, When } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import { ensureConnected, openApp, ensureAdvancedOptionsOpen } from '../support/ui.mjs';
 
+async function ensureOptionsPanelOpen(world) {
+  const panel = world.page.locator('#threadOptionsPanel');
+  const isHidden = await panel.evaluate((node) => node.hidden);
+  if (isHidden) {
+    await world.page.locator('#threadOptionsBtn').click();
+    await expect(world.page.locator('#applyOptionsBtn')).toBeVisible({ timeout: 5000 });
+  }
+}
+
 Given('the app is running in mock mode', function () {
   expect(String(this.parameters?.mock || '')).not.toBe('');
 });
@@ -64,34 +73,40 @@ Given('I have an active thread', async function () {
 });
 
 When('I set model to {string}', async function (model) {
+  await ensureOptionsPanelOpen(this);
   await this.page.locator('#threadModel').selectOption(model);
   this.selectedModel = model;
 });
 
 When('I set reasoning effort to {string}', async function (effort) {
+  await ensureOptionsPanelOpen(this);
   await this.page.locator('#threadReasoning').selectOption(effort);
   this.selectedReasoning = effort;
 });
 
 When('I set sandbox mode to {string}', async function (mode) {
+  await ensureOptionsPanelOpen(this);
   await ensureAdvancedOptionsOpen(this.page);
   await this.page.locator('#threadSandbox').selectOption(mode);
   this.selectedSandbox = mode;
 });
 
 When('I enable network access', async function () {
+  await ensureOptionsPanelOpen(this);
   await ensureAdvancedOptionsOpen(this.page);
   await this.page.locator('#threadNetwork').selectOption('on');
   this.selectedNetwork = 'on';
 });
 
 When('I enable web search', async function () {
+  await ensureOptionsPanelOpen(this);
   await ensureAdvancedOptionsOpen(this.page);
   await this.page.locator('#threadWebSearch').selectOption('on');
   this.selectedSearch = 'on';
 });
 
 When('I set approval policy to {string}', async function (policy) {
+  await ensureOptionsPanelOpen(this);
   await ensureAdvancedOptionsOpen(this.page);
   await this.page.locator('#threadApproval').selectOption(policy);
   this.selectedApproval = policy;

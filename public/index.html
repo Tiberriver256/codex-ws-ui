@@ -27,6 +27,10 @@
       <div id="output"></div>
     </div>
     <div class="input-area">
+      <div class="thread-actions" id="threadActions">
+        <button type="button" id="networkActionBtn" class="ghost-btn">Network Action</button>
+        <button type="button" id="approvalActionBtn" class="ghost-btn">Approval Action</button>
+      </div>
       <form id="form">
         <input 
           id="prompt" 
@@ -65,7 +69,7 @@
             </select>
           </label>
         </div>
-        <details class="options-advanced">
+        <details class="options-advanced" id="threadOptionsAdvanced">
           <summary>Advanced settings</summary>
           <div class="options-group">
             <label class="options-field">
@@ -110,13 +114,16 @@
                 <option value="on">On</option>
                 <option value="off">Off</option>
               </select>
+              <span id="webSearchDependencyNote" class="field-note" hidden>Requires network access.</span>
             </label>
           </div>
+          <p id="restrictedSettingsNote" class="field-note" hidden>Some settings are restricted by your permissions.</p>
         </details>
         <div class="options-group">
           <label class="options-field">
             Working Directory
             <input id="threadWorkingDir" placeholder="/path/to/workdir" />
+            <span id="threadWorkingDirError" class="field-error" hidden>Working directory must be inside the workspace.</span>
           </label>
           <label class="options-field">
             Additional Directories (one per line)
@@ -131,6 +138,13 @@
           <button type="button" id="applyOptionsBtn">Create Thread</button>
         </div>
       </form>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modalOverlay" hidden aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Confirm</h3>
+      <p id="modalMessage"></p>
+      <div class="modal-actions" id="modalActions"></div>
     </div>
   </div>
   <script src="/config.js"></script>

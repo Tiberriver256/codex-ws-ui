@@ -8,6 +8,7 @@ export function createThreadState({
   let currentThreadId = null;
   const threads = [];
   const threadOutputs = new Map();
+  let threadBadgeProvider = () => "";
 
   function getCurrentThreadId() {
     return currentThreadId;
@@ -33,7 +34,9 @@ export function createThreadState({
     threads.forEach((threadId) => {
       const option = document.createElement("option");
       option.value = threadId;
-      option.textContent = threadId.substring(0, threadIdDisplayLength) + "...";
+      const baseLabel = threadId.substring(0, threadIdDisplayLength) + "...";
+      const badges = threadBadgeProvider(threadId);
+      option.textContent = badges ? `${baseLabel} ${badges}` : baseLabel;
       if (threadId === currentThreadId) {
         option.selected = true;
       }
@@ -80,6 +83,24 @@ export function createThreadState({
     }
   }
 
+  function setThreadBadgeProvider(fn) {
+    if (typeof fn === "function") {
+      threadBadgeProvider = fn;
+    }
+  }
+
+  function getThreads() {
+    return [...threads];
+  }
+
+  function setThreads(threadIds = [], currentId = null) {
+    threads.length = 0;
+    if (Array.isArray(threadIds)) {
+      threads.push(...threadIds);
+    }
+    currentThreadId = currentId || threads[0] || null;
+  }
+
   function switchThread(threadId) {
     if (threadId && threadId !== currentThreadId) {
       saveCurrentOutput();
@@ -94,12 +115,15 @@ export function createThreadState({
     clearOutput,
     ensureThread,
     getCurrentThreadId,
+    getThreads,
     hasThread,
     loadThreadOutput,
     replaceThreadId,
     saveCurrentOutput,
+    setThreadBadgeProvider,
     setCurrentThreadId,
     setThreadOutput,
+    setThreads,
     switchThread,
     updateThreadSelector
   };
