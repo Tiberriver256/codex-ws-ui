@@ -107,6 +107,20 @@ test.describe('Codex WebSocket UI', () => {
     await expect(fileMessage).toContainText('File Changes');
   });
 
+  test('should show a diff for file change events', async ({ page }) => {
+    const input = page.locator('#prompt');
+    const sendButton = page.locator('button[type="submit"]');
+
+    await input.fill('Create a new file called test.js');
+    await sendButton.click();
+
+    const fileMessage = page.locator('.message.file-change');
+    await expect(fileMessage).toBeVisible({ timeout: 10000 });
+
+    // Diffs should include unified diff hunks.
+    await expect(fileMessage).toContainText('@@');
+  });
+
   test('should stream agent message text progressively', async ({ page }) => {
     const input = page.locator('#prompt');
     const sendButton = page.locator('button[type="submit"]');

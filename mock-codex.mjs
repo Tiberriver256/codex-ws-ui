@@ -2,6 +2,10 @@
 // This simulates the behavior of the real @openai/codex-sdk
 // Based on https://github.com/openai/codex/tree/main/sdk/typescript
 
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 /**
  * @typedef {Object} CodexOptions
  * @property {string} [codexPathOverride]
@@ -211,6 +215,68 @@ class MockThread {
    */
   get id() {
     return this._id;
+  }
+
+  async ensureWorkingDirectory() {
+    if (this._threadOptions?.workingDirectory) {
+      await fs.mkdir(this._threadOptions.workingDirectory, { recursive: true });
+      return this._threadOptions.workingDirectory;
+    }
+    const created = await fs.mkdtemp(path.join(os.tmpdir(), "codex-ws-ui-mock-"));
+    if (!this._threadOptions) this._threadOptions = {};
+    this._threadOptions.workingDirectory = created;
+    return created;
+  }
+
+  extractFileChangeFromInput(input) {
+    const normalizedInput = String(input).replaceAll("\\", "/");
+    const namedMatch = normalizedInput.match(/(?:called|named)\s+["'`]?([^"'`\s]+)["'`]?/i);
+    const genericMatch = normalizedInput.match(/([A-Za-z0-9_./-]+\.[A-Za-z0-9]+)\b/);
+    const filePath = (namedMatch && namedMatch[1]) || (genericMatch && genericMatch[1]) || "example.js";
+
+    const kind = /delete|remove/i.test(input)
+      ? "delete"
+      : /create|new/i.test(input)
+        ? "add"
+        : "update";
+
+    return { path: filePath, kind };
+  }
+
+  async applyMockFileChanges(changes, input) {
+    const workingDirectory = await this.ensureWorkingDirectory();
+    for (const change of changes) {
+      const absPath = path.isAbsolute(change.path)
+        ? change.path
+        : path.join(workingDirectory, change.path);
+      if (change.kind === "delete") {
+        await fs.rm(absPath, { force: true });
+        continue;
+      }
+
+      await fs.mkdir(path.dirname(absPath), { recursive: true });
+
+      if (change.kind === "add") {
+        const promptSummary = String(input).replaceAll("\n", " ").slice(0, 200);
+        const contents = [
+          "// mock file created by codex-ws-ui",
+          `// prompt: ${promptSummary}`,
+          'console.log("hello from mock");',
+          "",
+        ].join("\n");
+        await fs.writeFile(absPath, contents, "utf8");
+        continue;
+      }
+
+      // update
+      let existing = "";
+      try {
+        existing = await fs.readFile(absPath, "utf8");
+      } catch {}
+      const nextLine = 'console.log("updated by mock");';
+      const separator = existing.endsWith("\n") || existing.length === 0 ? "" : "\n";
+      await fs.writeFile(absPath, existing + separator + nextLine + "\n", "utf8");
+    }
   }
 
   /**
@@ -451,27 +517,29 @@ class MockThread {
     // Simulate file changes if relevant
     if (needsFiles) {
       const fileId = `file_${Date.now()}`;
+      const fileChange = this.extractFileChangeFromInput(input);
+      const changes = [fileChange];
+
+      await this.ensureWorkingDirectory();
       
       yield {
         type: "item.started",
         item: {
           id: fileId,
           type: "file_change",
-          changes: [
-            { path: "example.js", kind: "update" }
-          ],
+          changes,
           status: "completed"
         }
       };
+
+      await this.applyMockFileChanges(changes, input);
 
       yield {
         type: "item.completed",
         item: {
           id: fileId,
           type: "file_change",
-          changes: [
-            { path: "example.js", kind: "update" }
-          ],
+          changes,
           status: "completed"
         }
       };
