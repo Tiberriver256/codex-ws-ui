@@ -1,4 +1,6 @@
 import { createServer } from "http";
+import { spawn } from "node:child_process";
+import readline from "node:readline";
 import { WebSocketServer } from "ws";
 
 // Determine if we're in mock/test mode
@@ -13,6 +15,74 @@ if (MOCK_MODE) {
   const realModule = await import("@openai/codex-sdk");
   Codex = realModule.Codex;
 }
+
+async function fetchCodexModels() {
+  return new Promise((resolve) => {
+    const models = [];
+    let settled = false;
+    let timeout;
+    const child = spawn("codex", ["app-server"], {
+      stdio: ["pipe", "pipe", "pipe"],
+      env: process.env,
+    });
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      try {
+        child.stdin.end();
+      } catch {}
+      try {
+        child.kill();
+      } catch {}
+      resolve(result);
+    };
+
+    child.once("error", () => finish([]));
+
+    const rl = readline.createInterface({ input: child.stdout });
+    const initializeRequest = {
+      id: 0,
+      method: "initialize",
+      params: {
+        clientInfo: {
+          name: "codex-ws-ui",
+          title: "Codex WebSocket UI",
+          version: "0.0.0",
+        },
+      },
+    };
+    const listRequest = {
+      id: 1,
+      method: "model/list",
+      params: { limit: null, cursor: null },
+    };
+
+    child.stdin.write(JSON.stringify(initializeRequest) + "\n");
+
+    rl.on("line", (line) => {
+      let msg;
+      try {
+        msg = JSON.parse(line);
+      } catch {
+        return;
+      }
+      if (msg?.id === 0) {
+        child.stdin.write(JSON.stringify(listRequest) + "\n");
+        return;
+      }
+      if (msg?.id === 1 && msg?.result?.data) {
+        models.push(...msg.result.data);
+        finish(models);
+      }
+    });
+
+    timeout = setTimeout(() => finish(models), 2000);
+  });
+}
+
+const modelCatalog = await fetchCodexModels();
 
 // Enhanced HTML with better UI
 const html = `<!doctype html>
@@ -66,7 +136,8 @@ const html = `<!doctype html>
   .status {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.5rem 0.75rem;
+    flex-wrap: wrap;
     font-size: 0.85rem;
     color: var(--text-muted);
   }
@@ -170,6 +241,7 @@ const html = `<!doctype html>
   #form {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
   }
   #prompt {
     flex: 1;
@@ -280,16 +352,19 @@ const html = `<!doctype html>
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem 1.5rem;
+    padding: clamp(1rem, 2vw, 2rem);
     z-index: 10;
   }
   .options-card {
-    width: min(100%, 860px);
+    width: min(100%, 720px);
     background: var(--bg-elev);
     border: 1px solid var(--border);
     border-radius: 20px;
     box-shadow: var(--shadow);
     padding: 1.5rem 1.75rem;
+    max-height: calc(100vh - 2.5rem);
+    overflow: auto;
+    overscroll-behavior: contain;
   }
   .options-header {
     display: flex;
@@ -306,35 +381,26 @@ const html = `<!doctype html>
     color: var(--text-muted);
     font-size: 0.9rem;
   }
-  .options-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem 1.5rem;
-  }
-  .options-section {
+  .options-form {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    padding: 1rem;
-    background: rgba(13, 17, 23, 0.55);
-    border-radius: 14px;
-    border: 1px solid rgba(138, 202, 157, 0.12);
+    gap: 1rem;
   }
-  .options-section h3 {
-    font-size: 0.95rem;
-    color: var(--text);
-    margin-bottom: 0.2rem;
+  .options-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem 1rem;
   }
-  .options-section label {
+  .options-field {
     font-size: 0.8rem;
     color: var(--text-muted);
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
   }
-  .options-section input,
-  .options-section select,
-  .options-section textarea {
+  .options-field input,
+  .options-field select,
+  .options-field textarea {
     background: var(--bg-elev-strong);
     color: var(--text);
     border: 1px solid transparent;
@@ -343,9 +409,36 @@ const html = `<!doctype html>
     font-size: 0.9rem;
     font-family: inherit;
   }
-  .options-section textarea {
+  .options-field textarea {
     resize: vertical;
     min-height: 3.8rem;
+  }
+  .options-advanced {
+    border-radius: 14px;
+    border: 1px solid rgba(138, 202, 157, 0.14);
+    background: rgba(13, 17, 23, 0.5);
+    padding: 0.65rem 0.8rem;
+  }
+  .options-advanced summary {
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+  }
+  .options-advanced summary::-webkit-details-marker {
+    display: none;
+  }
+  .options-advanced summary::after {
+    content: "▾";
+    float: right;
+    color: var(--text-muted);
+  }
+  .options-advanced[open] summary {
+    margin-bottom: 0.75rem;
+  }
+  .options-advanced[open] summary::after {
+    content: "▴";
   }
   .options-actions {
     display: flex;
@@ -375,6 +468,23 @@ const html = `<!doctype html>
       align-items: flex-start;
       gap: 0.6rem;
     }
+    .status {
+      width: 100%;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+    }
+    .thread-controls {
+      width: 100%;
+    }
+    .thread-selector,
+    .new-thread-btn,
+    .thread-options-btn {
+      flex: 1 1 160px;
+    }
+    .thread-options-summary {
+      display: none;
+    }
     .output-scroll {
       padding: 1rem;
     }
@@ -386,7 +496,22 @@ const html = `<!doctype html>
       width: 100%;
     }
     .options-card {
-      padding: 1.2rem;
+      padding: 1.1rem;
+      border-radius: 16px;
+      max-height: calc(100vh - 1.5rem);
+    }
+    .options-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .options-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .options-actions .left-actions {
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
     }
   }
   ${MOCK_MODE ? `
@@ -443,29 +568,28 @@ const html = `<!doctype html>
         </div>
         <button type="button" id="closeOptionsBtn" class="ghost-btn">Close</button>
       </div>
-      <form id="threadOptionsForm">
-        <div class="options-grid">
-          <div class="options-section">
-            <h3>Model & Reasoning</h3>
-            <label>
-              Model
-              <input id="threadModel" placeholder="default (leave blank)" />
-            </label>
-            <label>
-              Reasoning Effort
-              <select id="threadReasoning">
-                <option value="default">Default</option>
-                <option value="minimal">Minimal</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="xhigh">Extra High</option>
-              </select>
-            </label>
-          </div>
-          <div class="options-section">
-            <h3>Safety & Approvals</h3>
-            <label>
+      <form id="threadOptionsForm" class="options-form">
+        <div class="options-group">
+          <label class="options-field">
+            Model
+            <select id="threadModel"></select>
+          </label>
+          <label class="options-field">
+            Reasoning Effort
+            <select id="threadReasoning">
+              <option value="default">Default</option>
+              <option value="minimal">Minimal</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="xhigh">Extra High</option>
+            </select>
+          </label>
+        </div>
+        <details class="options-advanced">
+          <summary>Advanced settings</summary>
+          <div class="options-group">
+            <label class="options-field">
               Approval Policy
               <select id="threadApproval">
                 <option value="default">Default</option>
@@ -475,7 +599,7 @@ const html = `<!doctype html>
                 <option value="untrusted">Untrusted</option>
               </select>
             </label>
-            <label>
+            <label class="options-field">
               Sandbox Mode
               <select id="threadSandbox">
                 <option value="default">Default</option>
@@ -484,7 +608,7 @@ const html = `<!doctype html>
                 <option value="danger-full-access">Danger Full Access</option>
               </select>
             </label>
-            <label>
+            <label class="options-field">
               Skip Git Repo Check
               <select id="threadSkipRepoCheck">
                 <option value="default">Default</option>
@@ -492,10 +616,7 @@ const html = `<!doctype html>
                 <option value="off">Off</option>
               </select>
             </label>
-          </div>
-          <div class="options-section">
-            <h3>Network & Search</h3>
-            <label>
+            <label class="options-field">
               Network Access
               <select id="threadNetwork">
                 <option value="default">Default</option>
@@ -503,7 +624,7 @@ const html = `<!doctype html>
                 <option value="off">Off</option>
               </select>
             </label>
-            <label>
+            <label class="options-field">
               Web Search
               <select id="threadWebSearch">
                 <option value="default">Default</option>
@@ -512,17 +633,16 @@ const html = `<!doctype html>
               </select>
             </label>
           </div>
-          <div class="options-section">
-            <h3>Workspace Scope</h3>
-            <label>
-              Working Directory
-              <input id="threadWorkingDir" placeholder="/path/to/workdir" />
-            </label>
-            <label>
-              Additional Directories (one per line)
-              <textarea id="threadAdditionalDirs" placeholder="/path/one&#10;/path/two"></textarea>
-            </label>
-          </div>
+        </details>
+        <div class="options-group">
+          <label class="options-field">
+            Working Directory
+            <input id="threadWorkingDir" placeholder="/path/to/workdir" />
+          </label>
+          <label class="options-field">
+            Additional Directories (one per line)
+            <textarea id="threadAdditionalDirs" placeholder="/path/one&#10;/path/two"></textarea>
+          </label>
         </div>
         <div class="options-actions">
           <div class="left-actions">
@@ -536,6 +656,7 @@ const html = `<!doctype html>
   </div>
   <script>
     const $ = q => document.querySelector(q);
+    const modelCatalog = ${JSON.stringify(modelCatalog)};
     const output = $("#output");
     const form = $("#form");
     const promptInput = $("#prompt");
@@ -571,6 +692,35 @@ const html = `<!doctype html>
     let threadOptionsById = new Map();
     let optionsPanelMode = "create";
     const defaultThreadOptions = {};
+
+    function renderModelSelect(currentValue = "") {
+      threadModel.innerHTML = "";
+      const models = Array.isArray(modelCatalog) ? modelCatalog : [];
+      const defaultModel = models.find((model) => model.isDefault || model.is_default) || models[0];
+      const defaultLabel = defaultModel
+        ? "Default (" + (defaultModel.displayName || defaultModel.display_name || defaultModel.model) + ")"
+        : "Default";
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = defaultLabel;
+      threadModel.appendChild(defaultOption);
+
+      models.forEach((model) => {
+        const option = document.createElement("option");
+        option.value = model.model;
+        option.textContent = model.displayName || model.display_name || model.model;
+        threadModel.appendChild(option);
+      });
+
+      if (currentValue && !models.some((model) => model.model === currentValue)) {
+        const option = document.createElement("option");
+        option.value = currentValue;
+        option.textContent = "Current: " + currentValue;
+        threadModel.appendChild(option);
+      }
+
+      threadModel.value = currentValue || "";
+    }
     
     function connect() {
       const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
@@ -710,7 +860,7 @@ const html = `<!doctype html>
     }
 
     function fillOptionsForm(options = {}) {
-      threadModel.value = options.model || "";
+      renderModelSelect(options.model || "");
       threadReasoning.value = options.modelReasoningEffort || "default";
       threadApproval.value = options.approvalPolicy || "default";
       threadSandbox.value = options.sandboxMode || "default";
