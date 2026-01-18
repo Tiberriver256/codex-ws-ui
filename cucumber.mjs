@@ -12,6 +12,7 @@ export default {
       'features/status-panel.feature',
       'features/auth.feature',
       'features/sessions.feature',
+      'features/mcp.feature',
       'features/structured-output.feature',
       'features/images.feature',
       'features/command-palette.feature',

@@ -136,6 +136,23 @@ const mockSessions = MOCK_MODE
       }
     ]
   : [];
+const mockMcpServers = MOCK_MODE
+  ? [
+      {
+        id: "mcp-local",
+        name: "Local MCP",
+        url: "http://127.0.0.1:5150",
+        requiresAuth: false,
+      },
+      {
+        id: "mcp-secure",
+        name: "Secure MCP",
+        url: "https://mcp.example",
+        requiresAuth: true,
+        authStatus: "logged-out",
+      },
+    ]
+  : [];
 const appConfig = {
   mockMode: MOCK_MODE,
   modelCatalog,
@@ -143,6 +160,7 @@ const appConfig = {
   isGitRepo,
   agents: agentsInfo,
   mockSessions,
+  mockMcpServers,
 };
 const appConfigScript = `window.__APP_CONFIG__ = ${JSON.stringify(appConfig).replace(/</g, "\u003c")};`;
 

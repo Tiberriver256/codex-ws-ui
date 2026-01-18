@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/changes.css">
 <link rel="stylesheet" href="/mentions.css">
 <link rel="stylesheet" href="/config.css">
+<link rel="stylesheet" href="/mcp.css">
 </head>
 <body>
   <div class="header">
@@ -33,6 +34,7 @@
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
         <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
         <button type="button" id="configPanelBtn" class="ghost-btn">Config</button>
+        <button type="button" id="mcpPanelBtn" class="ghost-btn">MCP</button>
         <button type="button" id="featureFlagsBtn" class="ghost-btn">Flags</button>
         <button type="button" id="execpolicyPanelBtn" class="ghost-btn">Execpolicy</button>
       </div>
@@ -240,6 +242,33 @@
           <select id="ossProviderSelect" class="panel-input"></select>
         </div>
         <p class="panel-note">Selections are reflected in thread settings.</p>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="mcpPanel" data-mcp-panel hidden>
+    <div class="options-card panel-card mcp-panel-card">
+      <div class="options-header">
+        <div>
+          <h2>MCP Servers</h2>
+          <p>Manage tool servers and auth state.</p>
+        </div>
+        <button type="button" id="closeMcpBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-note">Add servers for MCP tool discovery.</div>
+        <div class="mcp-add-row">
+          <input id="mcpNameInput" class="panel-input" placeholder="Server name" data-mcp-input="name" />
+          <input id="mcpUrlInput" class="panel-input" placeholder="https://mcp.example" data-mcp-input="url" />
+          <label class="mcp-auth-toggle">
+            <input type="checkbox" id="mcpAuthToggle" data-mcp-input="auth" />
+            Auth required
+          </label>
+          <button type="button" id="mcpAddBtn" data-mcp-action="add">Add server</button>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-note" id="mcpEmpty" data-mcp-empty hidden>No MCP servers configured.</div>
+        <div class="mcp-list" id="mcpList" data-mcp-list></div>
       </div>
     </div>
   </div>

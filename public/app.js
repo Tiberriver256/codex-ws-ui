@@ -17,6 +17,7 @@ import { createDiffPanel, createReviewPanel } from "./changes-panels.js";
 import { createMentions } from "./mentions.js";
 import { createConfigPanel } from "./config-panel.js";
 import { createFeatureFlagsPanel } from "./feature-flags.js";
+import { createMcpPanel } from "./mcp-panel.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -93,6 +94,7 @@ const authPanelBtn = $("#authPanelBtn");
 const sessionsPanelBtn = $("#sessionsPanelBtn");
 const configPanelBtn = $("#configPanelBtn");
 const featureFlagsBtn = $("#featureFlagsBtn");
+const mcpPanelBtn = $("#mcpPanelBtn");
 const statusPanel = $("#statusPanel");
 const closeStatusBtn = $("#closeStatusBtn");
 const authPanel = $("#authPanel");
@@ -113,6 +115,14 @@ const featureFlagsPanel = $("#featureFlagsPanel");
 const closeFeatureFlagsBtn = $("#closeFeatureFlagsBtn");
 const featureFlagsList = $("#featureFlagsList");
 const featureFlagsEmpty = $("#featureFlagsEmpty");
+const mcpPanel = $("#mcpPanel");
+const closeMcpBtn = $("#closeMcpBtn");
+const mcpList = $("#mcpList");
+const mcpEmpty = $("#mcpEmpty");
+const mcpNameInput = $("#mcpNameInput");
+const mcpUrlInput = $("#mcpUrlInput");
+const mcpAuthToggle = $("#mcpAuthToggle");
+const mcpAddBtn = $("#mcpAddBtn");
 const execpolicyPanelBtn = $("#execpolicyPanelBtn");
 const execpolicyPanel = $("#execpolicyPanel");
 const closeExecpolicyBtn = $("#closeExecpolicyBtn");
@@ -301,6 +311,20 @@ const featureFlagsPanelController = createFeatureFlagsPanel({
   }
 });
 
+const mcpPanelController = createMcpPanel({
+  panel: mcpPanel,
+  closeBtn: closeMcpBtn,
+  appConfig,
+  elements: {
+    listEl: mcpList,
+    emptyEl: mcpEmpty,
+    nameInput: mcpNameInput,
+    urlInput: mcpUrlInput,
+    authToggle: mcpAuthToggle,
+    addBtn: mcpAddBtn
+  }
+});
+
 const execpolicyPanelController = createExecPolicyPanel({
   panel: execpolicyPanel,
   closeBtn: closeExecpolicyBtn,
@@ -396,6 +420,10 @@ window.__TEST__.setFeatureFlags = (flags) => {
   featureFlagsPanelController?.setFlags?.(flags);
 };
 window.__TEST__.getFeatureFlags = () => featureFlagsPanelController?.getFlags?.();
+window.__TEST__.setMcpServers = (servers) => {
+  mcpPanelController?.setServers?.(servers);
+};
+window.__TEST__.getMcpServers = () => mcpPanelController?.getServers?.() || [];
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
@@ -411,6 +439,9 @@ if (configPanelBtn) {
 }
 if (featureFlagsBtn) {
   featureFlagsBtn.addEventListener("click", () => featureFlagsPanelController.open());
+}
+if (mcpPanelBtn) {
+  mcpPanelBtn.addEventListener("click", () => mcpPanelController.open());
 }
 if (execpolicyPanelBtn) {
   execpolicyPanelBtn.addEventListener("click", () => execpolicyPanelController.open());
