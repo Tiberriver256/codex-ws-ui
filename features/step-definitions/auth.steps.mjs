@@ -23,7 +23,7 @@ Given('I am in a headless environment', async function () {
   });
 });
 
-When('I choose {string}', async function (label) {
+When('I choose auth option {string}', async function (label) {
   await openAuthPanel(this);
   if (label === 'Login') {
     await this.page.locator('#authOAuthBtn').click();

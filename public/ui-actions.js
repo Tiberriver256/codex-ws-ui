@@ -4,6 +4,8 @@ export function createUiActions({
   uiRenderer,
   sendMessage,
   modal,
+  approvalUi,
+  approvalRules,
   persistState,
   onUsage
 }) {
@@ -37,9 +39,12 @@ export function createUiActions({
     return window.confirm("Network is off for this thread. Re-enable?") ? "enable" : "cancel";
   }
 
-  async function promptApprovalRequest() {
+  async function promptApprovalRequest(request = {}) {
+    if (approvalUi?.requestApproval) {
+      return approvalUi.requestApproval(request);
+    }
     if (modal?.open) {
-      return modal.open({
+      const decision = await modal.open({
         title: "Approval Required",
         message: "This action requires approval.",
         actions: [
@@ -48,8 +53,9 @@ export function createUiActions({
           { label: "Always Allow", value: "always" }
         ]
       });
+      return { decision };
     }
-    return window.confirm("Approve this action?") ? "approve" : "deny";
+    return { decision: window.confirm("Approve this action?") ? "approve" : "deny" };
   }
 
   function createNewThread(options = {}) {
@@ -290,13 +296,39 @@ export function createUiActions({
         }
         const options = threadOptions.getThreadOptions(currentThreadId) || defaultThreadOptions;
         if (options.approvalPolicy === "on-request") {
-          const choice = await promptApprovalRequest();
-          if (choice === "approve") {
-            addSystemMessage("✅ Approval granted.");
-          } else if (choice === "always") {
-            addSystemMessage("✅ Approval granted (always allow).");
+          const request = {
+            action: "workspace-write",
+            label: "Workspace write",
+            prompt: "Allow this action to write to the workspace?",
+            risk: "Writes to local files",
+            policy: "on-request",
+            details: [
+              { label: "Action", value: "Workspace write" },
+              { label: "Risk", value: "Writes to local files" },
+              { label: "Policy", value: "on-request" }
+            ]
+          };
+          const result = await promptApprovalRequest(request);
+          const decision = typeof result === "string" ? result : result?.decision;
+          if (decision === "approve") {
+            if (result?.viaRule) {
+              addSystemMessage("✅ Action auto-approved by rule.");
+            } else {
+              addSystemMessage("✅ Approval granted. Action completed.");
+            }
+          } else if (decision === "always") {
+            const rule = approvalRules?.addRule?.({
+              action: request.action,
+              label: request.label,
+              source: "always-allow"
+            });
+            if (rule) {
+              addSystemMessage("✅ Approval granted. Rule added for future actions.");
+            } else {
+              addSystemMessage("✅ Approval granted (always allow).");
+            }
           } else {
-            addSystemMessage("❌ Approval denied.");
+            addSystemMessage("❌ Approval denied. Action canceled.");
           }
           return;
         }

@@ -5,6 +5,9 @@ import { createUiActions } from "./ui-actions.js";
 import { createWsClient } from "./ws-client.js";
 import { createModalController } from "./modal.js";
 import { loadThreadState, saveThreadState } from "./thread-storage.js";
+import { createApprovalRulesStore } from "./approval-rules.js";
+import { createApprovalUi } from "./approval-ui.js";
+import { createExecPolicyPanel } from "./execpolicy-panel.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -48,6 +51,7 @@ const threadOptionsSummaryStrip = $("#threadOptionsSummaryStrip");
 const threadOptionsAdvanced = $("#threadOptionsAdvanced");
 const threadModel = $("#threadModel");
 const threadReasoning = $("#threadReasoning");
+const threadApprovalPreset = $("#threadApprovalPreset");
 const threadApproval = $("#threadApproval");
 const threadSandbox = $("#threadSandbox");
 const threadSkipRepoCheck = $("#threadSkipRepoCheck");
@@ -73,6 +77,14 @@ const authPanel = $("#authPanel");
 const closeAuthBtn = $("#closeAuthBtn");
 const sessionsPanel = $("#sessionsPanel");
 const closeSessionsBtn = $("#closeSessionsBtn");
+const execpolicyPanelBtn = $("#execpolicyPanelBtn");
+const execpolicyPanel = $("#execpolicyPanel");
+const closeExecpolicyBtn = $("#closeExecpolicyBtn");
+const execpolicyRulesList = $("#execpolicyRulesList");
+const execpolicyRulesEmpty = $("#execpolicyRulesEmpty");
+const execpolicyPreviewInput = $("#execpolicyPreviewInput");
+const execpolicyPreviewResult = $("#execpolicyPreviewResult");
+const execpolicyPreviewBtn = $("#execpolicyPreviewBtn");
 
 const threadState = createThreadState({ outputEl: output, threadSelector });
 const modal = createModalController({
@@ -95,6 +107,7 @@ const threadOptions = createThreadOptionsController({
     applyOptionsBtn,
     threadModel,
     threadReasoning,
+    threadApprovalPreset,
     threadApproval,
     threadSandbox,
     threadSkipRepoCheck,
@@ -113,6 +126,8 @@ const sessionsStore = createSessionsStore({
   mockSessions,
   workspaceRoot: appConfig.workspaceRoot || ""
 });
+const approvalRulesStore = createApprovalRulesStore();
+const approvalUi = createApprovalUi({ uiRenderer, rulesStore: approvalRulesStore });
 
 const statusPanelController = createStatusPanel({
   panel: statusPanel,
@@ -175,6 +190,19 @@ const sessionsPanelController = createSessionsPanel({
   }
 });
 
+const execpolicyPanelController = createExecPolicyPanel({
+  panel: execpolicyPanel,
+  closeBtn: closeExecpolicyBtn,
+  rulesStore: approvalRulesStore,
+  elements: {
+    rulesListEl: execpolicyRulesList,
+    emptyStateEl: execpolicyRulesEmpty,
+    previewInput: execpolicyPreviewInput,
+    previewResult: execpolicyPreviewResult,
+    previewBtn: execpolicyPreviewBtn
+  }
+});
+
 authStore.subscribe(() => statusPanelController.refresh());
 
 threadOptions.bindFormEvents();
@@ -214,6 +242,9 @@ if (authPanelBtn) {
 if (sessionsPanelBtn) {
   sessionsPanelBtn.addEventListener("click", () => sessionsPanelController.open());
 }
+if (execpolicyPanelBtn) {
+  execpolicyPanelBtn.addEventListener("click", () => execpolicyPanelController.open());
+}
 
 let wsSend = () => {};
 const uiActions = createUiActions({
@@ -222,6 +253,8 @@ const uiActions = createUiActions({
   uiRenderer,
   sendMessage: (payload) => wsSend(payload),
   modal,
+  approvalUi,
+  approvalRules: approvalRulesStore,
   persistState: persistThreadState,
   onUsage: (usage) => statusPanelController.setUsage(usage)
 });

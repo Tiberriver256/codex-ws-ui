@@ -30,6 +30,12 @@ function arraysEqual(a, b) {
   return a.every((value, index) => value === b[index]);
 }
 
+const APPROVAL_PRESETS = {
+  lockdown: { approvalPolicy: "on-request", sandboxMode: "read-only" },
+  balanced: { approvalPolicy: "on-request", sandboxMode: "workspace-write" },
+  fast: { approvalPolicy: "never", sandboxMode: "workspace-write" },
+};
+
 export function createThreadOptionsController({
   modelCatalog,
   getCurrentThreadId,
@@ -46,6 +52,7 @@ export function createThreadOptionsController({
     applyOptionsBtn,
     threadModel,
     threadReasoning,
+    threadApprovalPreset,
     threadApproval,
     threadSandbox,
     threadSkipRepoCheck,
@@ -63,6 +70,7 @@ export function createThreadOptionsController({
   const optionsByThreadId = new Map();
   let optionsPanelMode = "create";
   let isRestricted = false;
+  let applyingPreset = false;
 
   function renderModelSelect(currentValue = "") {
     threadModel.innerHTML = "";
@@ -200,9 +208,38 @@ export function createThreadOptionsController({
     }
   }
 
+  function markPresetCustom() {
+    if (!threadApprovalPreset) return;
+    if (!applyingPreset) {
+      threadApprovalPreset.value = "custom";
+    }
+  }
+
+  function applyApprovalPreset(presetKey) {
+    if (!threadApprovalPreset) return;
+    const preset = APPROVAL_PRESETS[presetKey];
+    if (!preset) return;
+    applyingPreset = true;
+    threadApproval.value = preset.approvalPolicy;
+    threadSandbox.value = preset.sandboxMode;
+    applyingPreset = false;
+    updateOptionsSummaryFromForm();
+  }
+
+  function handlePresetChange() {
+    if (!threadApprovalPreset) return;
+    const value = threadApprovalPreset.value;
+    if (value && value !== "custom") {
+      applyApprovalPreset(value);
+    }
+  }
+
   function fillOptionsForm(options = {}) {
     renderModelSelect(options.model || "");
     threadReasoning.value = options.modelReasoningEffort || "default";
+    if (threadApprovalPreset) {
+      threadApprovalPreset.value = "custom";
+    }
     threadApproval.value = options.approvalPolicy || "default";
     threadSandbox.value = options.sandboxMode || "default";
     threadSkipRepoCheck.value = typeof options.skipGitRepoCheck === "boolean"
@@ -301,11 +338,23 @@ export function createThreadOptionsController({
     threadWebSearch.addEventListener("change", () => {
       void handleWebSearchChange();
     });
+    if (threadApprovalPreset) {
+      threadApprovalPreset.addEventListener("change", () => {
+        handlePresetChange();
+        updateOptionsSummaryFromForm();
+      });
+    }
+    threadApproval.addEventListener("change", () => {
+      markPresetCustom();
+      updateOptionsSummaryFromForm();
+    });
+    threadSandbox.addEventListener("change", () => {
+      markPresetCustom();
+      updateOptionsSummaryFromForm();
+    });
     [
       threadModel,
       threadReasoning,
-      threadApproval,
-      threadSandbox,
       threadSkipRepoCheck,
       threadNetwork,
       threadWebSearch,

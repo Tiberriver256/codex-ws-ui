@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Codex WebSocket UI</title>
 <link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/approvals.css">
 </head>
 <body>
   <div class="header">
@@ -22,6 +23,7 @@
         <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
         <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
+        <button type="button" id="execpolicyPanelBtn" class="ghost-btn">Execpolicy</button>
       </div>
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Connecting...</span>
@@ -77,6 +79,16 @@
         <details class="options-advanced" id="threadOptionsAdvanced">
           <summary>Advanced settings</summary>
           <div class="options-group">
+            <label class="options-field">
+              Approval Preset
+              <select id="threadApprovalPreset">
+                <option value="custom">Custom</option>
+                <option value="lockdown">Lockdown (Read Only + On Request)</option>
+                <option value="balanced">Balanced (Workspace Write + On Request)</option>
+                <option value="fast">Fast (Workspace Write + Never)</option>
+              </select>
+              <span class="field-note">Updates approval and sandbox together.</span>
+            </label>
             <label class="options-field">
               Approval Policy
               <select id="threadApproval">
@@ -262,6 +274,30 @@
         </div>
         <div class="panel-note" id="sessionsEmpty" hidden>No sessions available.</div>
         <div class="session-list" id="sessionsList"></div>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="execpolicyPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Execpolicy</h2>
+          <p>Approval rules and previews.</p>
+        </div>
+        <button type="button" id="closeExecpolicyBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <h3>Rules</h3>
+        <div class="panel-note" id="execpolicyRulesEmpty">No rules saved yet.</div>
+        <div class="execpolicy-list" id="execpolicyRulesList"></div>
+      </div>
+      <div class="panel-section">
+        <h3>Preview</h3>
+        <div class="panel-inline">
+          <input id="execpolicyPreviewInput" class="panel-input" placeholder="action:workspace-write" />
+          <button type="button" id="execpolicyPreviewBtn" class="ghost-btn">Check</button>
+        </div>
+        <div class="panel-note execpolicy-preview" id="execpolicyPreviewResult">Enter an action to preview.</div>
       </div>
     </div>
   </div>

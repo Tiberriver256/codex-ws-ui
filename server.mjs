@@ -196,7 +196,7 @@ const server = createServer(async (req, res) => {
   }
 
   if (pathname === "/") pathname = "/index.html";
-  const relativePath = pathname.replace(/^\\/+/, "");
+  const relativePath = pathname.replace(/^\/+/, "");
   const filePath = path.resolve(publicDir, relativePath);
   if (!filePath.startsWith(publicDir + path.sep)) {
     res.writeHead(403);

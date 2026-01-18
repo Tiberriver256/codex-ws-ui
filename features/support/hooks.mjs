@@ -31,7 +31,8 @@ AfterAll(async function () {
 });
 
 Before(async function () {
-  this.context = await browser.newContext({ baseURL: this.parameters.baseURL });
+  const baseURL = this.parameters?.baseURL || process.env.BASE_URL || 'http://127.0.0.1:8080';
+  this.context = await browser.newContext({ baseURL });
   this.page = await this.context.newPage();
   this.sentPrompts = [];
   this.pendingThreadIds = null;
@@ -41,8 +42,10 @@ Before(async function () {
 
 After(async function (scenario) {
   if (scenario.result?.status === 'FAILED' && this.page) {
-    const screenshot = await this.page.screenshot({ fullPage: true });
-    await this.attach(screenshot, 'image/png');
+    if (typeof this.attach === 'function') {
+      const screenshot = await this.page.screenshot({ fullPage: true });
+      await this.attach(screenshot, 'image/png');
+    }
   }
   if (this.context) {
     await this.context.close();

@@ -67,7 +67,7 @@ Feature: Thread options UX
     Given I have an active thread
     When I set approval policy to "on-request"
     And I attempt an action requiring approval
-    Then an approval request is shown
+    Then an approval request is shown in the timeline
 
   Scenario: Skip git repo check toggles safely
     Given I have an active thread in a git repo

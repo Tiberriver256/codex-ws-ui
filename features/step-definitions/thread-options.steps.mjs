@@ -199,11 +199,12 @@ When('I attempt an action requiring approval', async function () {
   await this.page.locator('#approvalActionBtn').click();
 });
 
-Then('an approval request is shown', async function () {
-  const modal = this.page.locator('#modalOverlay');
-  await expect(modal).toBeVisible();
-  await expect(this.page.locator('#modalTitle')).toContainText('Approval');
-  await this.page.locator('#modalActions [data-modal-action="deny"]').click();
+Then('an approval request is shown in the timeline', async function () {
+  const card = this.page.locator('.approval-card');
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('Approval');
+  await expect(card).toContainText('Action');
+  await this.page.locator('[data-approval-action="deny"]').click();
 });
 
 Given('I have an active thread in a git repo', async function () {

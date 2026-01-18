@@ -2,13 +2,20 @@ import { expect } from '@playwright/test';
 
 export async function openApp(world) {
   if (!world?.page) throw new Error('Playwright page not initialized');
-  await world.page.goto('/');
+  const baseURL = world.parameters?.baseURL || process.env.BASE_URL || 'http://127.0.0.1:8080';
+  await world.page.goto(baseURL);
   await expect(world.page.locator('#statusText')).toHaveText('Connected');
 }
 
 export async function ensureConnected(world) {
   if (!world?.page) throw new Error('Playwright page not initialized');
-  await expect(world.page.locator('#statusText')).toHaveText('Connected');
+  const status = world.page.locator('#statusText');
+  const hasStatus = await status.count();
+  if (!hasStatus) {
+    await openApp(world);
+    return;
+  }
+  await expect(status).toHaveText('Connected');
 }
 
 export async function ensureAdvancedOptionsOpen(page) {

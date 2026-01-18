@@ -5,17 +5,17 @@ Feature: Authentication flows
   So I can sign in without the CLI
 
   Scenario: OAuth login
-    When I choose "Login"
+    When I choose auth option "Login"
     Then I am guided through OAuth
     And login status reflects success
 
   Scenario: API key login
-    When I choose "Login with API key"
+    When I choose auth option "Login with API key"
     And I submit a valid API key
     Then login status reflects success
 
   Scenario: Device auth
-    When I choose "Device auth"
+    When I choose auth option "Device auth"
     Then I see device auth instructions
     And login status reflects success after completion
 
@@ -26,10 +26,10 @@ Feature: Authentication flows
 
   Scenario: Logout
     Given I am logged in
-    When I choose "Logout"
+    When I choose auth option "Logout"
     Then I am logged out and status updates
 
   Scenario: Headless guidance
     Given I am in a headless environment
-    When I choose "Login"
+    When I choose auth option "Login"
     Then I see copyable port-forward guidance

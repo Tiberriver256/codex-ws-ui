@@ -6,6 +6,7 @@ export default {
       'features/connection-status.feature',
       'features/models.feature',
       'features/thread-options-basic.feature',
+      'features/approvals.feature',
       'features/status-panel.feature',
       'features/auth.feature',
       'features/sessions.feature',
