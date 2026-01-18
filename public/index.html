@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Codex WebSocket UI</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="header">
+    <h1>Codex WebSocket UI</h1>
+    <div class="status">
+      <span class="mock-badge" hidden>MOCK MODE</span>
+      <div class="thread-controls">
+        <select id="threadSelector" class="thread-selector" disabled>
+          <option value="">No thread</option>
+        </select>
+        <button id="newThreadBtn" class="new-thread-btn" disabled>+ New Thread</button>
+        <button id="threadOptionsBtn" class="thread-options-btn" disabled>Thread Settings</button>
+        <span id="threadOptionsSummary" class="thread-options-summary">Defaults</span>
+      </div>
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </div>
+  <div class="main">
+    <div class="output-scroll">
+      <div id="output"></div>
+    </div>
+    <div class="input-area">
+      <form id="form">
+        <input 
+          id="prompt" 
+          autocomplete="off" 
+          placeholder="Type your message here..."
+          disabled
+        >
+        <button type="submit" disabled>Send</button>
+      </form>
+    </div>
+  </div>
+  <div class="options-panel" id="threadOptionsPanel" hidden>
+    <div class="options-card">
+      <div class="options-header">
+        <div>
+          <h2>Thread Options</h2>
+          <p id="threadOptionsModeText">Create a new thread with custom options.</p>
+        </div>
+        <button type="button" id="closeOptionsBtn" class="ghost-btn">Close</button>
+      </div>
+      <form id="threadOptionsForm" class="options-form">
+        <div class="options-group">
+          <label class="options-field">
+            Model
+            <select id="threadModel"></select>
+          </label>
+          <label class="options-field">
+            Reasoning Effort
+            <select id="threadReasoning">
+              <option value="default">Default</option>
+              <option value="minimal">Minimal</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="xhigh">Extra High</option>
+            </select>
+          </label>
+        </div>
+        <details class="options-advanced">
+          <summary>Advanced settings</summary>
+          <div class="options-group">
+            <label class="options-field">
+              Approval Policy
+              <select id="threadApproval">
+                <option value="default">Default</option>
+                <option value="never">Never</option>
+                <option value="on-request">On Request</option>
+                <option value="on-failure">On Failure</option>
+                <option value="untrusted">Untrusted</option>
+              </select>
+            </label>
+            <label class="options-field">
+              Sandbox Mode
+              <select id="threadSandbox">
+                <option value="default">Default</option>
+                <option value="read-only">Read Only</option>
+                <option value="workspace-write">Workspace Write</option>
+                <option value="danger-full-access">Danger Full Access</option>
+              </select>
+            </label>
+            <label class="options-field">
+              Skip Git Repo Check
+              <select id="threadSkipRepoCheck">
+                <option value="default">Default</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+            <label class="options-field">
+              Network Access
+              <select id="threadNetwork">
+                <option value="default">Default</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+            <label class="options-field">
+              Web Search
+              <select id="threadWebSearch">
+                <option value="default">Default</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+          </div>
+        </details>
+        <div class="options-group">
+          <label class="options-field">
+            Working Directory
+            <input id="threadWorkingDir" placeholder="/path/to/workdir" />
+          </label>
+          <label class="options-field">
+            Additional Directories (one per line)
+            <textarea id="threadAdditionalDirs" placeholder="/path/one&#10;/path/two"></textarea>
+          </label>
+        </div>
+        <div class="options-actions">
+          <div class="left-actions">
+            <button type="button" id="resetOptionsBtn" class="ghost-btn">Use Defaults</button>
+            <span class="options-summary-strip" id="threadOptionsSummaryStrip">Defaults</span>
+          </div>
+          <button type="button" id="applyOptionsBtn">Create Thread</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="/config.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
