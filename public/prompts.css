@@ -1,0 +1,129 @@
+.prompts-card .palette-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.prompt-item {
+  width: 100%;
+  text-align: left;
+  background: rgba(13, 17, 23, 0.7);
+  border: 1px solid rgba(138, 202, 157, 0.18);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--text);
+}
+
+.prompt-item:hover {
+  border-color: var(--accent);
+  background: rgba(138, 202, 157, 0.08);
+}
+
+.prompt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.prompt-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.prompt-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.prompt-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prompt-dup-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(138, 202, 157, 0.15);
+  color: var(--text);
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(138, 202, 157, 0.3);
+}
+
+.palette-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0.25rem;
+}
+
+.prompt-fill {
+  border: 1px solid rgba(138, 202, 157, 0.18);
+  border-radius: 16px;
+  padding: 0.9rem;
+  background: rgba(13, 17, 23, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.prompt-fill-header h3 {
+  font-size: 0.95rem;
+}
+
+.prompt-fill-header p {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.prompt-fill-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.prompt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.prompt-field input {
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--bg-elev-strong);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.prompt-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(138, 202, 157, 0.2);
+}
+
+.prompt-fill-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 700px) {
+  .prompt-item {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .prompt-fill {
+    padding: 0.75rem;
+  }
+}

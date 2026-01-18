@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="/structured-output.css">
 <link rel="stylesheet" href="/image-input.css">
 <link rel="stylesheet" href="/palette.css">
+<link rel="stylesheet" href="/prompts.css">
 <link rel="stylesheet" href="/changes.css">
 </head>
 <body>
@@ -24,6 +25,7 @@
         <span id="threadOptionsSummary" class="thread-options-summary">Defaults</span>
       </div>
       <div class="panel-controls">
+        <button type="button" id="promptsPaletteBtn" class="ghost-btn">Prompts</button>
         <button type="button" id="commandPaletteBtn" class="ghost-btn">Commands</button>
         <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
@@ -383,6 +385,45 @@
             <div class="palette-list" id="commandPaletteAdvancedList"></div>
           </div>
         </details>
+      </div>
+    </div>
+  </div>
+  <div class="palette-overlay" id="promptsPalette" hidden aria-hidden="true">
+    <div class="palette-card prompts-card" role="dialog" aria-modal="true" aria-labelledby="promptsPaletteTitle">
+      <div class="palette-header">
+        <div>
+          <h2 id="promptsPaletteTitle">Prompts</h2>
+          <p>Reuse templates from your prompt library.</p>
+        </div>
+        <button type="button" id="closePromptsPaletteBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="palette-body">
+        <input
+          id="promptsPaletteInput"
+          class="palette-input"
+          placeholder="Search prompts"
+          autocomplete="off"
+        >
+        <div class="palette-section" id="promptsPaletteSection">
+          <h3>Prompts</h3>
+          <div class="palette-list" id="promptsPaletteList"></div>
+          <div class="palette-note" id="promptsEmpty" hidden>No prompts found.</div>
+        </div>
+        <div class="palette-section" id="promptsDuplicatesSection" hidden>
+          <h3>Choose variant</h3>
+          <div class="palette-list" id="promptsDuplicatesList"></div>
+        </div>
+        <div class="prompt-fill" id="promptFillPanel" hidden>
+          <div class="prompt-fill-header">
+            <h3 id="promptFillTitle">Fill placeholders</h3>
+            <p id="promptFillSubtitle"></p>
+          </div>
+          <div class="prompt-fill-fields" id="promptFillFields"></div>
+          <div class="prompt-fill-actions">
+            <button type="button" id="promptFillCancel" class="ghost-btn">Back</button>
+            <button type="button" id="promptFillApply">Insert Prompt</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

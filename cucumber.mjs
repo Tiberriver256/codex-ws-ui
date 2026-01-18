@@ -14,6 +14,7 @@ export default {
       'features/structured-output.feature',
       'features/images.feature',
       'features/command-palette.feature',
+      'features/prompts.feature',
       'features/review-apply.feature',
     ],
     import: [

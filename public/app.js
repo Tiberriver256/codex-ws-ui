@@ -11,6 +11,7 @@ import { createApprovalRulesStore } from "./approval-rules.js";
 import { createApprovalUi } from "./approval-ui.js";
 import { createExecPolicyPanel } from "./execpolicy-panel.js";
 import { createCommandPalette } from "./command-palette.js";
+import { createPromptsPalette } from "./prompts-palette.js";
 import { createChangesStore } from "./changes-store.js";
 import { createDiffPanel, createReviewPanel } from "./changes-panels.js";
 import {
@@ -26,6 +27,8 @@ const appConfig = window.__APP_CONFIG__ || {};
 const modelCatalog = Array.isArray(appConfig.modelCatalog) ? appConfig.modelCatalog : [];
 const mockMode = Boolean(appConfig.mockMode);
 const mockSessions = Array.isArray(appConfig.mockSessions) ? appConfig.mockSessions : [];
+const mockPrompts = Array.isArray(appConfig.mockPrompts) ? appConfig.mockPrompts : [];
+let promptFixtures = mockPrompts;
 const mockBadge = $(".mock-badge");
 if (mockBadge) {
   if (mockMode) {
@@ -95,7 +98,22 @@ const execpolicyRulesEmpty = $("#execpolicyRulesEmpty");
 const execpolicyPreviewInput = $("#execpolicyPreviewInput");
 const execpolicyPreviewResult = $("#execpolicyPreviewResult");
 const execpolicyPreviewBtn = $("#execpolicyPreviewBtn");
+const promptsPaletteBtn = $("#promptsPaletteBtn");
 const commandPaletteBtn = $("#commandPaletteBtn");
+const promptsPaletteOverlay = $("#promptsPalette");
+const closePromptsPaletteBtn = $("#closePromptsPaletteBtn");
+const promptsPaletteInput = $("#promptsPaletteInput");
+const promptsPaletteList = $("#promptsPaletteList");
+const promptsPaletteSection = $("#promptsPaletteSection");
+const promptsEmpty = $("#promptsEmpty");
+const promptsDuplicatesSection = $("#promptsDuplicatesSection");
+const promptsDuplicatesList = $("#promptsDuplicatesList");
+const promptFillPanel = $("#promptFillPanel");
+const promptFillTitle = $("#promptFillTitle");
+const promptFillSubtitle = $("#promptFillSubtitle");
+const promptFillFields = $("#promptFillFields");
+const promptFillApply = $("#promptFillApply");
+const promptFillCancel = $("#promptFillCancel");
 const commandPaletteOverlay = $("#commandPalette");
 const closeCommandPaletteBtn = $("#closeCommandPaletteBtn");
 const commandPaletteInput = $("#commandPaletteInput");
@@ -112,6 +130,7 @@ const reviewSummary = $("#reviewSummary");
 const reviewFiles = $("#reviewFiles");
 const reviewEmpty = $("#reviewEmpty");
 const applyResult = $("#applyResult");
+let promptsPalette = null;
 
 const threadState = createThreadState({ outputEl: output, threadSelector });
 const modal = createModalController({
@@ -293,6 +312,13 @@ window.__TEST__.setLocalChanges = (value) => {
 window.__TEST__.hasLocalChanges = () => changesStore.hasLocalChanges();
 window.__TEST__.getThreadOptionsSnapshot = () => threadOptions.getOptionsSnapshot();
 window.__TEST__.refreshThreadList = () => threadState.updateThreadSelector();
+window.__TEST__.setPrompts = (value) => {
+  promptFixtures = Array.isArray(value) ? value : [];
+};
+window.__TEST__.getPrompts = () => promptFixtures;
+window.__TEST__.startNewSession = () => {
+  promptsPalette?.close?.();
+};
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
@@ -385,6 +411,33 @@ const commandPalette = createCommandPalette({
   ]
 });
 
+promptsPalette = createPromptsPalette({
+  overlay: promptsPaletteOverlay,
+  closeBtn: closePromptsPaletteBtn,
+  input: promptsPaletteInput,
+  listEl: promptsPaletteList,
+  listSection: promptsPaletteSection,
+  emptyEl: promptsEmpty,
+  duplicatesSection: promptsDuplicatesSection,
+  duplicatesListEl: promptsDuplicatesList,
+  fillPanel: promptFillPanel,
+  fillFieldsEl: promptFillFields,
+  fillTitleEl: promptFillTitle,
+  fillSubtitleEl: promptFillSubtitle,
+  fillApplyBtn: promptFillApply,
+  fillCancelBtn: promptFillCancel,
+  getPrompts: () => promptFixtures,
+  onInsert: (text) => {
+    if (promptInput) {
+      promptInput.value = text;
+      promptInput.focus();
+    }
+  }
+});
+
+if (promptsPaletteBtn) {
+  promptsPaletteBtn.addEventListener("click", () => promptsPalette.open());
+}
 if (commandPaletteBtn) {
   commandPaletteBtn.addEventListener("click", () => commandPalette.open());
 }
