@@ -24,7 +24,7 @@ export class MockCodex {
 class MockThread {
   constructor(options = {}, id = null) {
     this.options = options;
-    this._id = id || `thread_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this._id = id || `thread_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   get id() {
