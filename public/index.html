@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="/config.css">
 <link rel="stylesheet" href="/mcp.css">
 <link rel="stylesheet" href="/cloud.css">
+<link rel="stylesheet" href="/observability.css">
 </head>
 <body>
   <div class="header">
@@ -36,6 +37,7 @@
         <button type="button" id="commandPaletteBtn" class="ghost-btn">Commands</button>
         <button type="button" id="reasoningPanelBtn" class="ghost-btn">Reasoning</button>
         <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
+        <button type="button" id="observabilityPanelBtn" class="ghost-btn">Observability</button>
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
         <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
         <button type="button" id="configPanelBtn" class="ghost-btn">Config</button>
@@ -385,6 +387,45 @@
           <span class="panel-value" id="statusAgentsPath">AGENTS.md not found</span>
         </div>
         <pre class="panel-pre" id="statusAgentsInstructions">No AGENTS instructions loaded.</pre>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="observabilityPanel" hidden>
+    <div class="options-card panel-card observability-card">
+      <div class="options-header">
+        <div>
+          <h2>Observability</h2>
+          <p>Exports, logs, and notifications.</p>
+        </div>
+        <button type="button" id="closeObservabilityBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <h3>Export transcript</h3>
+        <div class="panel-row">
+          <span class="panel-label">JSONL</span>
+          <div class="panel-inline">
+            <button type="button" id="observabilityExportBtn">Export JSONL</button>
+            <span class="panel-note">Exports current messages.</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <h3>Logs</h3>
+        <div class="panel-row">
+          <span class="panel-label">Path</span>
+          <span class="panel-value" id="observabilityLogPath">~/.codex/log</span>
+        </div>
+        <pre class="panel-pre observability-logs" id="observabilityLogs">No logs loaded.</pre>
+      </div>
+      <div class="panel-section">
+        <h3>Notifications</h3>
+        <label class="panel-inline">
+          <input type="checkbox" id="observabilityNotificationsToggle" />
+          Enable browser notifications
+        </label>
+        <div class="panel-note">Notifications are stored for audit and tests.</div>
+        <div class="observability-notifications" id="observabilityNotificationsList"></div>
+        <div class="panel-note" id="observabilityNotificationsEmpty">No notifications yet.</div>
       </div>
     </div>
   </div>

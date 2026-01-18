@@ -10,6 +10,7 @@ export default {
       'features/thread-options-basic.feature',
       'features/approvals.feature',
       'features/status-panel.feature',
+      'features/observability.feature',
       'features/auth.feature',
       'features/sessions.feature',
       'features/mcp.feature',

@@ -1,0 +1,36 @@
+.observability-logs {
+  min-height: 140px;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.observability-notifications {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.observability-notification {
+  border: 1px solid rgba(138, 202, 157, 0.2);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  background: rgba(13, 17, 23, 0.55);
+}
+
+.observability-notification-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.observability-notification-body {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  white-space: pre-wrap;
+}
+
+.observability-notification-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}

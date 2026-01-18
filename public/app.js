@@ -21,6 +21,7 @@ import { createFeatureFlagsPanel } from "./feature-flags.js";
 import { createMcpPanel } from "./mcp-panel.js";
 import { createCloudPanel } from "./cloud-panel.js";
 import { createReasoningPanel } from "./reasoning-panel.js";
+import { createObservabilityPanel } from "./observability-panel.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -102,8 +103,17 @@ const configPanelBtn = $("#configPanelBtn");
 const featureFlagsBtn = $("#featureFlagsBtn");
 const mcpPanelBtn = $("#mcpPanelBtn");
 const cloudPanelBtn = $("#cloudPanelBtn");
+const observabilityPanelBtn = $("#observabilityPanelBtn");
 const statusPanel = $("#statusPanel");
 const closeStatusBtn = $("#closeStatusBtn");
+const observabilityPanel = $("#observabilityPanel");
+const closeObservabilityBtn = $("#closeObservabilityBtn");
+const observabilityExportBtn = $("#observabilityExportBtn");
+const observabilityLogPath = $("#observabilityLogPath");
+const observabilityLogs = $("#observabilityLogs");
+const observabilityNotificationsToggle = $("#observabilityNotificationsToggle");
+const observabilityNotificationsList = $("#observabilityNotificationsList");
+const observabilityNotificationsEmpty = $("#observabilityNotificationsEmpty");
 const authPanel = $("#authPanel");
 const closeAuthBtn = $("#closeAuthBtn");
 const sessionsPanel = $("#sessionsPanel");
@@ -235,7 +245,8 @@ const sessionsStore = createSessionsStore({
 });
 const approvalRulesStore = createApprovalRulesStore();
 const changesStore = createChangesStore();
-const approvalUi = createApprovalUi({ uiRenderer, rulesStore: approvalRulesStore });
+const approvalUiBase = createApprovalUi({ uiRenderer, rulesStore: approvalRulesStore });
+let approvalUi = approvalUiBase;
 const imageInput = createImageInput({
   inputEl: imageFileInput,
   dropzoneEl: imageDropzone,
@@ -372,6 +383,31 @@ const cloudPanelController = createCloudPanel({
   }
 });
 
+const observabilityPanelController = createObservabilityPanel({
+  panel: observabilityPanel,
+  closeBtn: closeObservabilityBtn,
+  outputEl: output,
+  appConfig,
+  elements: {
+    exportBtn: observabilityExportBtn,
+    logsEl: observabilityLogs,
+    logPathEl: observabilityLogPath,
+    notificationsToggle: observabilityNotificationsToggle,
+    notificationsList: observabilityNotificationsList,
+    notificationsEmpty: observabilityNotificationsEmpty
+  }
+});
+
+if (observabilityPanelController) {
+  approvalUi = {
+    ...approvalUiBase,
+    requestApproval: (request) => {
+      observabilityPanelController.notifyApprovalRequest?.(request);
+      return approvalUiBase.requestApproval(request);
+    }
+  };
+}
+
 const execpolicyPanelController = createExecPolicyPanel({
   panel: execpolicyPanel,
   closeBtn: closeExecpolicyBtn,
@@ -449,6 +485,30 @@ window.__TEST__.setLocalChanges = (value) => {
 window.__TEST__.hasLocalChanges = () => changesStore.hasLocalChanges();
 window.__TEST__.getThreadOptionsSnapshot = () => threadOptions.getOptionsSnapshot();
 window.__TEST__.refreshThreadList = () => threadState.updateThreadSelector();
+window.__TEST__.setObservabilityLogs = (value) => {
+  observabilityPanelController?.setLogs?.(value);
+};
+window.__TEST__.setObservabilityLogPath = (value) => {
+  observabilityPanelController?.setLogPath?.(value);
+};
+window.__TEST__.getObservabilityLogs = () => observabilityPanelController?.getLogs?.();
+window.__TEST__.setObservabilityNotificationsEnabled = (value) => {
+  observabilityPanelController?.setNotificationsEnabled?.(value);
+};
+window.__TEST__.getObservabilityNotifications = () =>
+  observabilityPanelController?.getNotifications?.() || [];
+window.__TEST__.clearObservabilityNotifications = () => {
+  observabilityPanelController?.clearNotifications?.();
+};
+window.__TEST__.emitObservabilityTurnCompleted = () => {
+  observabilityPanelController?.handleEvent?.({
+    type: "turn.completed",
+    usage: { input_tokens: 1, cached_input_tokens: 0, output_tokens: 1 }
+  });
+};
+window.__TEST__.emitObservabilityApprovalRequest = (request = {}) => {
+  observabilityPanelController?.notifyApprovalRequest?.(request);
+};
 window.__TEST__.setPrompts = (value) => {
   promptFixtures = Array.isArray(value) ? value : [];
 };
@@ -494,6 +554,9 @@ window.__TEST__.runCloudTask = (taskId) => {
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
+}
+if (observabilityPanelBtn) {
+  observabilityPanelBtn.addEventListener("click", () => observabilityPanelController.open());
 }
 if (reasoningPanelBtn) {
   reasoningPanelBtn.addEventListener("click", () => reasoningPanelController.open());
@@ -541,6 +604,11 @@ const uiActions = createUiActions({
   schemaInput,
   imageInput
 });
+
+const handleEvent = (event) => {
+  uiActions.handleEvent(event);
+  observabilityPanelController?.handleEvent?.(event);
+};
 
 function openModelSelector() {
   const currentThreadId = threadState.getCurrentThreadId();
@@ -661,7 +729,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 const appServerClient = createAppServerClient({
-  onEvent: uiActions.handleEvent,
+  onEvent: handleEvent,
   onSend: (payload) => {
     if (testState) {
       testState.lastAppServerPayload = payload;
@@ -694,7 +762,7 @@ const wsClient = createWsClient({
   newThreadBtn,
   threadOptionsBtn,
   addSystemMessage,
-  onEvent: uiActions.handleEvent,
+  onEvent: handleEvent,
   onPlainMessage: (data) => addMessage(data, "assistant")
 });
 
