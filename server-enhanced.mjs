@@ -286,6 +286,8 @@ const html = `<!doctype html>
       };
     }
     
+    const THREAD_ID_DISPLAY_LENGTH = 25;
+    
     function saveCurrentOutput() {
       if (currentThreadId) {
         threadOutputs.set(currentThreadId, output.innerHTML);
@@ -308,7 +310,7 @@ const html = `<!doctype html>
       threads.forEach(threadId => {
         const option = document.createElement("option");
         option.value = threadId;
-        option.textContent = threadId.substring(0, 25) + "...";
+        option.textContent = threadId.substring(0, THREAD_ID_DISPLAY_LENGTH) + "...";
         if (threadId === currentThreadId) {
           option.selected = true;
         }
@@ -507,6 +509,28 @@ wss.on("connection", (ws) => {
   const threads = new Map(); // Store multiple threads
   let currentThreadId = null;
 
+  // Helper function to handle message processing
+  async function processMessage(prompt) {
+    // Create initial thread if none exists
+    if (!currentThreadId) {
+      const thread = codex.startThread({ skipGitRepoCheck: true });
+      currentThreadId = thread.id;
+      threads.set(currentThreadId, thread);
+      console.log(`Auto-created thread: ${currentThreadId}`);
+    }
+    
+    const thread = threads.get(currentThreadId);
+    console.log(`Received on thread ${currentThreadId}: ${prompt}`);
+    
+    // Use the enhanced event streaming
+    const { events } = await thread.runStreamed(prompt);
+    
+    for await (const event of events) {
+      // Send the full event as JSON for rich client handling
+      ws.send(JSON.stringify(event));
+    }
+  }
+
   ws.on("message", async (m) => {
     try {
       const message = JSON.parse(m.toString());
@@ -547,28 +571,9 @@ wss.on("connection", (ws) => {
           threads: threadList,
           current: currentThreadId
         }));
-      } else if (message.type === "message" || typeof message === "string") {
+      } else if (message.type === "message") {
         // Handle regular message
-        const prompt = message.type === "message" ? message.text : message;
-        
-        // Create initial thread if none exists
-        if (!currentThreadId) {
-          const thread = codex.startThread({ skipGitRepoCheck: true });
-          currentThreadId = thread.id;
-          threads.set(currentThreadId, thread);
-          console.log(`Auto-created thread: ${currentThreadId}`);
-        }
-        
-        const thread = threads.get(currentThreadId);
-        console.log(`Received on thread ${currentThreadId}: ${prompt}`);
-        
-        // Use the enhanced event streaming
-        const { events } = await thread.runStreamed(prompt);
-        
-        for await (const event of events) {
-          // Send the full event as JSON for rich client handling
-          ws.send(JSON.stringify(event));
-        }
+        await processMessage(message.text);
       } else {
         ws.send(JSON.stringify({
           type: "error",
@@ -577,26 +582,9 @@ wss.on("connection", (ws) => {
       }
     } catch (err) {
       // Fallback for plain text messages (backward compatibility)
-      if (typeof m.toString() === "string" && !m.toString().startsWith("{")) {
+      if (!m.toString().startsWith("{")) {
         try {
-          const prompt = m.toString();
-          
-          // Create initial thread if none exists
-          if (!currentThreadId) {
-            const thread = codex.startThread({ skipGitRepoCheck: true });
-            currentThreadId = thread.id;
-            threads.set(currentThreadId, thread);
-            console.log(`Auto-created thread: ${currentThreadId}`);
-          }
-          
-          const thread = threads.get(currentThreadId);
-          console.log(`Received: ${prompt}`);
-          
-          const { events } = await thread.runStreamed(prompt);
-          
-          for await (const event of events) {
-            ws.send(JSON.stringify(event));
-          }
+          await processMessage(m.toString());
           return;
         } catch (fallbackErr) {
           console.error("Fallback error:", fallbackErr);
