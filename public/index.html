@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/approvals.css">
 <link rel="stylesheet" href="/structured-output.css">
+<link rel="stylesheet" href="/reasoning.css">
 <link rel="stylesheet" href="/image-input.css">
 <link rel="stylesheet" href="/palette.css">
 <link rel="stylesheet" href="/prompts.css">
@@ -33,6 +34,7 @@
         <button type="button" id="promptsPaletteBtn" class="ghost-btn">Prompts</button>
         <button type="button" id="skillsPaletteBtn" class="ghost-btn">Skills</button>
         <button type="button" id="commandPaletteBtn" class="ghost-btn">Commands</button>
+        <button type="button" id="reasoningPanelBtn" class="ghost-btn">Reasoning</button>
         <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
         <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
@@ -306,6 +308,28 @@
       <div class="panel-section">
         <div class="panel-note" id="featureFlagsEmpty" hidden>No feature flags available.</div>
         <div class="flags-list" id="featureFlagsList"></div>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="reasoningPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Reasoning</h2>
+          <p>Control reasoning visibility.</p>
+        </div>
+        <button type="button" id="closeReasoningBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <label class="panel-inline">
+          <input type="checkbox" id="showReasoningToggle" checked />
+          Show reasoning
+        </label>
+        <label class="panel-inline">
+          <input type="checkbox" id="showRawReasoningToggle" />
+          Show raw reasoning
+        </label>
+        <div class="panel-note">Raw reasoning shows unformatted traces when available.</div>
       </div>
     </div>
   </div>

@@ -21,6 +21,7 @@ export default {
       'features/skills.feature',
       'features/mentions.feature',
       'features/review-apply.feature',
+      'features/reasoning-display.feature',
     ],
     import: [
       'features/step-definitions/**/*.mjs',

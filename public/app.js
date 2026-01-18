@@ -20,6 +20,7 @@ import { createConfigPanel } from "./config-panel.js";
 import { createFeatureFlagsPanel } from "./feature-flags.js";
 import { createMcpPanel } from "./mcp-panel.js";
 import { createCloudPanel } from "./cloud-panel.js";
+import { createReasoningPanel } from "./reasoning-panel.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -93,6 +94,7 @@ const modalOverlay = $("#modalOverlay");
 const modalTitle = $("#modalTitle");
 const modalMessage = $("#modalMessage");
 const modalActions = $("#modalActions");
+const reasoningPanelBtn = $("#reasoningPanelBtn");
 const statusPanelBtn = $("#statusPanelBtn");
 const authPanelBtn = $("#authPanelBtn");
 const sessionsPanelBtn = $("#sessionsPanelBtn");
@@ -120,6 +122,10 @@ const featureFlagsPanel = $("#featureFlagsPanel");
 const closeFeatureFlagsBtn = $("#closeFeatureFlagsBtn");
 const featureFlagsList = $("#featureFlagsList");
 const featureFlagsEmpty = $("#featureFlagsEmpty");
+const reasoningPanel = $("#reasoningPanel");
+const closeReasoningBtn = $("#closeReasoningBtn");
+const showReasoningToggle = $("#showReasoningToggle");
+const showRawReasoningToggle = $("#showRawReasoningToggle");
 const mcpPanel = $("#mcpPanel");
 const closeMcpBtn = $("#closeMcpBtn");
 const mcpList = $("#mcpList");
@@ -332,6 +338,16 @@ const featureFlagsPanelController = createFeatureFlagsPanel({
   }
 });
 
+const reasoningPanelController = createReasoningPanel({
+  panel: reasoningPanel,
+  closeBtn: closeReasoningBtn,
+  outputEl: output,
+  elements: {
+    showReasoningToggle,
+    showRawReasoningToggle
+  }
+});
+
 const mcpPanelController = createMcpPanel({
   panel: mcpPanel,
   closeBtn: closeMcpBtn,
@@ -419,6 +435,14 @@ window.__TEST__.setHeadless = (value) => {
 window.__TEST__.emitStructuredOutput = (data) => {
   uiRenderer.addStructuredOutput(data, { title: "Structured Output" });
 };
+window.__TEST__.emitReasoning = (text) => {
+  const message = text === undefined || text === null ? "Reasoning message" : String(text);
+  addMessage(message, "reasoning");
+};
+window.__TEST__.emitRawReasoning = (text) => {
+  const message = text === undefined || text === null ? "Raw reasoning message" : String(text);
+  addMessage(message, "reasoning raw");
+};
 window.__TEST__.setLocalChanges = (value) => {
   changesStore.setLocalChanges(value);
 };
@@ -470,6 +494,9 @@ window.__TEST__.runCloudTask = (taskId) => {
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
+}
+if (reasoningPanelBtn) {
+  reasoningPanelBtn.addEventListener("click", () => reasoningPanelController.open());
 }
 if (authPanelBtn) {
   authPanelBtn.addEventListener("click", () => authPanelController.open());

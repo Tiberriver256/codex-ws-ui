@@ -1,0 +1,14 @@
+#output[data-show-reasoning="false"] .message.reasoning:not(.raw) {
+  display: none;
+}
+
+#output[data-show-raw-reasoning="false"] .message.reasoning.raw {
+  display: none;
+}
+
+.message.reasoning.raw {
+  color: #9cdcfe;
+  font-style: normal;
+  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+  white-space: pre-wrap;
+}
