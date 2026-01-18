@@ -1,0 +1,70 @@
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
+import { Codex } from "@openai/codex-sdk";
+
+if (!process.env.CODEX_API_KEY) {
+  console.error("Set CODEX_API_KEY and rerun.");
+  process.exit(1);
+}
+
+const html = `<!doctype html>
+<meta charset=utf-8>
+<title>Codex UI</title>
+<form id=f><input id=p autocomplete=off><button>Send</button></form>
+<pre id=o></pre>
+<script>
+const $ = q => document.querySelector(q),
+  o = $("#o"),
+  ws = new WebSocket("ws://127.0.0.1:8080");
+ws.onmessage = e => { o.textContent += e.data; };
+$("#f").onsubmit = ev => {
+  ev.preventDefault();
+  const v = $("#p").value.trim();
+  if (!v) return;
+  o.textContent += "\\n> " + v + "\\n";
+  ws.send(v);
+  $("#p").value = "";
+};
+</script>`;
+
+const textFrom = e =>
+  e?.delta?.text ??
+  (typeof e?.item?.content?.text === "string"
+    ? e.item.content.text
+    : Array.isArray(e?.item?.content)
+      ? e.item.content.map(x => x.text || "").join("")
+      : "");
+
+const server = createServer((req, res) => {
+  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  res.end(html);
+});
+
+const wss = new WebSocketServer({ server });
+
+wss.on("connection", ws => {
+  const codex = new Codex();
+  const thread = codex.startThread({ skipGitRepoCheck: true });
+
+  ws.on("message", async m => {
+    try {
+      const prompt = m.toString();
+      if (typeof thread.runStreamed === "function") {
+        const { events } = await thread.runStreamed(prompt);
+        for await (const e of events) {
+          const t = textFrom(e);
+          if (t) ws.send(t);
+        }
+      } else {
+        const result = await thread.run(prompt);
+        ws.send(typeof result === "string" ? result : JSON.stringify(result));
+      }
+    } catch (err) {
+      ws.send("\n[error] " + String(err) + "\n");
+    }
+  });
+});
+
+server.listen(8080, "127.0.0.1", () =>
+  console.log("http://127.0.0.1:8080")
+);
