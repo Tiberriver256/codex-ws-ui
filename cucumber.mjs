@@ -15,6 +15,7 @@ export default {
       'features/images.feature',
       'features/command-palette.feature',
       'features/prompts.feature',
+      'features/mentions.feature',
       'features/review-apply.feature',
     ],
     import: [

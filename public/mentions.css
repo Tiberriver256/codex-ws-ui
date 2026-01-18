@@ -1,0 +1,68 @@
+.prompt-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+
+.prompt-wrap #prompt {
+  width: 100%;
+}
+
+.mentions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  background: var(--bg-elev-strong);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 0.35rem;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.mentions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mention-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mention-item:hover {
+  border-color: var(--accent);
+  background: rgba(138, 202, 157, 0.12);
+}
+
+.mention-path {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.mentions-empty {
+  padding: 0.45rem 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .mentions {
+    max-height: 180px;
+  }
+}

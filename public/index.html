@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="/palette.css">
 <link rel="stylesheet" href="/prompts.css">
 <link rel="stylesheet" href="/changes.css">
+<link rel="stylesheet" href="/mentions.css">
 </head>
 <body>
   <div class="header">
@@ -65,12 +66,18 @@
         </div>
       </div>
       <form id="form">
-        <input 
-          id="prompt" 
-          autocomplete="off" 
-          placeholder="Type your message here..."
-          disabled
-        >
+        <div class="prompt-wrap">
+          <input
+            id="prompt"
+            autocomplete="off"
+            placeholder="Type your message here..."
+            disabled
+          >
+          <div class="mentions" id="mentions" hidden aria-hidden="true">
+            <div class="mentions-list" id="mentionsList"></div>
+            <div class="mentions-empty" id="mentionsEmpty" hidden>No matching files.</div>
+          </div>
+        </div>
         <button type="submit" disabled>Send</button>
       </form>
     </div>

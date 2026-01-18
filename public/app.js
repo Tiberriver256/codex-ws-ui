@@ -14,6 +14,7 @@ import { createCommandPalette } from "./command-palette.js";
 import { createPromptsPalette } from "./prompts-palette.js";
 import { createChangesStore } from "./changes-store.js";
 import { createDiffPanel, createReviewPanel } from "./changes-panels.js";
+import { createMentions } from "./mentions.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -28,6 +29,7 @@ const modelCatalog = Array.isArray(appConfig.modelCatalog) ? appConfig.modelCata
 const mockMode = Boolean(appConfig.mockMode);
 const mockSessions = Array.isArray(appConfig.mockSessions) ? appConfig.mockSessions : [];
 const mockPrompts = Array.isArray(appConfig.mockPrompts) ? appConfig.mockPrompts : [];
+let workspaceFiles = Array.isArray(appConfig.workspaceFiles) ? appConfig.workspaceFiles : [];
 let promptFixtures = mockPrompts;
 const mockBadge = $(".mock-badge");
 if (mockBadge) {
@@ -43,6 +45,9 @@ const uiRenderer = createUiRenderer(output);
 const { addMessage, addSystemMessage } = uiRenderer;
 const form = $("#form");
 const promptInput = $("#prompt");
+const mentionsContainer = $("#mentions");
+const mentionsList = $("#mentionsList");
+const mentionsEmpty = $("#mentionsEmpty");
 const schemaInput = $("#structuredSchema");
 const imageFileInput = $("#imageFileInput");
 const imageDropzone = $("#imageDropzone");
@@ -131,6 +136,7 @@ const reviewFiles = $("#reviewFiles");
 const reviewEmpty = $("#reviewEmpty");
 const applyResult = $("#applyResult");
 let promptsPalette = null;
+let mentions = null;
 
 const threadState = createThreadState({ outputEl: output, threadSelector });
 const modal = createModalController({
@@ -180,6 +186,14 @@ const imageInput = createImageInput({
   dropzoneEl: imageDropzone,
   thumbsEl: imageThumbs,
   placeholderEl: imageDropHint
+});
+
+mentions = createMentions({
+  inputEl: promptInput,
+  containerEl: mentionsContainer,
+  listEl: mentionsList,
+  emptyEl: mentionsEmpty,
+  getFiles: () => workspaceFiles
 });
 
 const statusPanelController = createStatusPanel({
@@ -315,7 +329,12 @@ window.__TEST__.refreshThreadList = () => threadState.updateThreadSelector();
 window.__TEST__.setPrompts = (value) => {
   promptFixtures = Array.isArray(value) ? value : [];
 };
+window.__TEST__.setWorkspaceFiles = (value) => {
+  workspaceFiles = Array.isArray(value) ? value : [];
+  mentions?.refresh?.();
+};
 window.__TEST__.getPrompts = () => promptFixtures;
+window.__TEST__.getWorkspaceFiles = () => workspaceFiles;
 window.__TEST__.startNewSession = () => {
   promptsPalette?.close?.();
 };
