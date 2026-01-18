@@ -502,26 +502,40 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => {
   console.log("Client connected");
   const codex = new Codex();
-  const threads = new Map(); // Store multiple threads
+  const threads = new Map(); // Store threads by ID once known
+  let currentThread = null; // Store the current thread object directly
   let currentThreadId = null;
 
   // Helper function to handle message processing
   async function processMessage(prompt) {
     // Create initial thread if none exists
-    if (!currentThreadId) {
-      const thread = codex.startThread({ skipGitRepoCheck: true });
-      currentThreadId = thread.id;
-      threads.set(currentThreadId, thread);
-      console.log(`Auto-created thread: ${currentThreadId}`);
+    if (!currentThread) {
+      currentThread = codex.startThread({ skipGitRepoCheck: true });
+      // Note: thread.id may be null initially with the real SDK
+      // It gets set after thread.started event is received
+      console.log(`Auto-created thread (id pending until first turn)`);
     }
     
-    const thread = threads.get(currentThreadId);
-    console.log(`Received on thread ${currentThreadId}: ${prompt}`);
+    console.log(`Received on thread ${currentThreadId || '(pending)'}: ${prompt}`);
     
     // Use the enhanced event streaming
-    const { events } = await thread.runStreamed(prompt);
+    const { events } = await currentThread.runStreamed(prompt);
     
     for await (const event of events) {
+      // Capture the thread ID from thread.started event
+      // This is when the real SDK assigns the ID
+      if (event.type === "thread.started" && event.thread_id) {
+        const newThreadId = event.thread_id;
+        if (!currentThreadId) {
+          // First turn - store the thread with its ID
+          currentThreadId = newThreadId;
+          threads.set(currentThreadId, currentThread);
+          console.log(`Thread ID assigned: ${currentThreadId}`);
+        }
+        // Note: The SDK emits thread.started on every turn with the same ID
+        // We only update on first turn; subsequent turns should have matching IDs
+      }
+      
       // Send the full event as JSON for rich client handling
       ws.send(JSON.stringify(event));
     }
@@ -534,20 +548,28 @@ wss.on("connection", (ws) => {
       // Handle different message types
       if (message.type === "new_thread") {
         // Create a new thread
-        const thread = codex.startThread({ skipGitRepoCheck: true });
-        currentThreadId = thread.id;
-        threads.set(currentThreadId, thread);
-        console.log(`Created new thread: ${currentThreadId}`);
+        // Note: With real SDK, thread.id is null until first turn's thread.started event
+        // We generate a temporary ID for immediate UI feedback, but it will be
+        // replaced with the real ID when the first message is sent
+        currentThread = codex.startThread({ skipGitRepoCheck: true });
+        // Use thread.id if available (mock SDK), otherwise generate a temporary one
+        const tempId = currentThread.id || `pending_${Date.now()}`;
+        currentThreadId = currentThread.id; // Will be null with real SDK
+        if (currentThreadId) {
+          threads.set(currentThreadId, currentThread);
+        }
+        console.log(`Created new thread: ${currentThreadId || tempId}`);
         
         ws.send(JSON.stringify({
           type: "thread_created",
-          thread_id: currentThreadId
+          thread_id: currentThreadId || tempId
         }));
       } else if (message.type === "switch_thread") {
         // Switch to an existing thread
         const threadId = message.thread_id;
         if (threads.has(threadId)) {
           currentThreadId = threadId;
+          currentThread = threads.get(threadId);
           console.log(`Switched to thread: ${threadId}`);
           ws.send(JSON.stringify({
             type: "thread_switched",
