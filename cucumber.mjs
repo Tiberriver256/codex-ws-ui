@@ -6,6 +6,9 @@ export default {
       'features/connection-status.feature',
       'features/models.feature',
       'features/thread-options-basic.feature',
+      'features/status-panel.feature',
+      'features/auth.feature',
+      'features/sessions.feature',
     ],
     import: [
       'features/step-definitions/**/*.mjs',

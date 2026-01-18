@@ -99,16 +99,50 @@ const modelCatalog = MOCK_MODE ? mockModelCatalog : await fetchCodexModels();
 // Static asset serving
 const publicDir = path.resolve(process.cwd(), "public");
 const workspaceRoot = process.cwd();
+const agentsDiscoveryPath = path.join(workspaceRoot, "AGENTS.md");
 let isGitRepo = false;
 try {
   await fs.stat(path.join(workspaceRoot, ".git"));
   isGitRepo = true;
 } catch {}
+const agentsInstructions = await readTextFile(agentsDiscoveryPath);
+const agentsInfo = {
+  discoveryPath: agentsDiscoveryPath,
+  instructions: agentsInstructions ? agentsInstructions.trim() : "",
+  found: Boolean(agentsInstructions)
+};
+const mockSessions = MOCK_MODE
+  ? [
+      {
+        id: "mock_session_main",
+        cwd: workspaceRoot,
+        branch: "main",
+        lastRunAt: Date.parse("2025-01-15T12:00:00Z"),
+        workspaceRoot
+      },
+      {
+        id: "mock_session_ui",
+        cwd: path.join(workspaceRoot, "public"),
+        branch: "feature/ui",
+        lastRunAt: Date.parse("2025-01-14T16:30:00Z"),
+        workspaceRoot
+      },
+      {
+        id: "mock_session_other",
+        cwd: "/tmp/mock-workspace",
+        branch: "experiment",
+        lastRunAt: Date.parse("2025-01-10T09:15:00Z"),
+        workspaceRoot: "/tmp/mock-workspace"
+      }
+    ]
+  : [];
 const appConfig = {
   mockMode: MOCK_MODE,
   modelCatalog,
   workspaceRoot,
   isGitRepo,
+  agents: agentsInfo,
+  mockSessions,
 };
 const appConfigScript = `window.__APP_CONFIG__ = ${JSON.stringify(appConfig).replace(/</g, "\u003c")};`;
 

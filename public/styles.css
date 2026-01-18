@@ -54,6 +54,16 @@ body {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+.panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.panel-controls button {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+}
 .thread-selector {
   background: var(--bg-elev-strong);
   border: 1px solid transparent;
@@ -283,6 +293,133 @@ a {
   overflow: auto;
   overscroll-behavior: contain;
 }
+.panel-card h3 {
+  font-size: 1rem;
+}
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.panel-grid {
+  display: grid;
+  gap: 0.6rem;
+}
+.panel-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 160px) 1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+.panel-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.panel-value {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.panel-pre {
+  display: block;
+  background: rgba(13, 17, 23, 0.6);
+  border: 1px solid rgba(138, 202, 157, 0.2);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.panel-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.panel-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--bg-elev-strong);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+.panel-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.panel-textarea {
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(138, 202, 157, 0.2);
+  background: rgba(13, 17, 23, 0.6);
+  color: var(--text);
+  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.session-card {
+  border: 1px solid rgba(138, 202, 157, 0.18);
+  border-radius: 14px;
+  padding: 0.75rem;
+  background: rgba(13, 17, 23, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.session-id {
+  font-family: "JetBrains Mono", "Consolas", "Monaco", "Courier New", monospace;
+  font-size: 0.85rem;
+}
+.session-meta {
+  display: grid;
+  gap: 0.4rem;
+}
+.session-field {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.session-label {
+  color: var(--text-muted);
+}
+.session-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.session-note input {
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--bg-elev-strong);
+  color: var(--text);
+  font-size: 0.85rem;
+}
 .options-header {
   display: flex;
   align-items: flex-start;
@@ -460,6 +597,9 @@ a {
   .thread-options-summary {
     display: none;
   }
+  .panel-controls button {
+    flex: 1 1 120px;
+  }
   .output-scroll {
     padding: 1rem;
   }
@@ -490,6 +630,19 @@ a {
     width: 100%;
     flex-direction: column;
     align-items: flex-start;
+  }
+  .panel-row {
+    grid-template-columns: 1fr;
+  }
+  .panel-inline,
+  .panel-actions {
+    width: 100%;
+  }
+  .panel-input {
+    width: 100%;
+  }
+  .session-field {
+    grid-template-columns: 1fr;
   }
 }
 .mock-badge {

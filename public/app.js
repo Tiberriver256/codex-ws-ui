@@ -5,11 +5,19 @@ import { createUiActions } from "./ui-actions.js";
 import { createWsClient } from "./ws-client.js";
 import { createModalController } from "./modal.js";
 import { loadThreadState, saveThreadState } from "./thread-storage.js";
+import {
+  createAuthPanel,
+  createAuthStore,
+  createSessionsPanel,
+  createSessionsStore,
+  createStatusPanel
+} from "./panels.js";
 
 const $ = (q) => document.querySelector(q);
 const appConfig = window.__APP_CONFIG__ || {};
 const modelCatalog = Array.isArray(appConfig.modelCatalog) ? appConfig.modelCatalog : [];
 const mockMode = Boolean(appConfig.mockMode);
+const mockSessions = Array.isArray(appConfig.mockSessions) ? appConfig.mockSessions : [];
 const mockBadge = $(".mock-badge");
 if (mockBadge) {
   if (mockMode) {
@@ -56,6 +64,15 @@ const modalOverlay = $("#modalOverlay");
 const modalTitle = $("#modalTitle");
 const modalMessage = $("#modalMessage");
 const modalActions = $("#modalActions");
+const statusPanelBtn = $("#statusPanelBtn");
+const authPanelBtn = $("#authPanelBtn");
+const sessionsPanelBtn = $("#sessionsPanelBtn");
+const statusPanel = $("#statusPanel");
+const closeStatusBtn = $("#closeStatusBtn");
+const authPanel = $("#authPanel");
+const closeAuthBtn = $("#closeAuthBtn");
+const sessionsPanel = $("#sessionsPanel");
+const closeSessionsBtn = $("#closeSessionsBtn");
 
 const threadState = createThreadState({ outputEl: output, threadSelector });
 const modal = createModalController({
@@ -91,6 +108,75 @@ const threadOptions = createThreadOptionsController({
   }
 });
 
+const authStore = createAuthStore();
+const sessionsStore = createSessionsStore({
+  mockSessions,
+  workspaceRoot: appConfig.workspaceRoot || ""
+});
+
+const statusPanelController = createStatusPanel({
+  panel: statusPanel,
+  closeBtn: closeStatusBtn,
+  appConfig,
+  threadState,
+  threadOptions,
+  authStore,
+  elements: {
+    modelEl: $("#statusModel"),
+    sandboxEl: $("#statusSandbox"),
+    approvalsEl: $("#statusApprovals"),
+    cwdEl: $("#statusCwd"),
+    addDirsEl: $("#statusAddDirs"),
+    tokensEl: $("#statusTokens"),
+    authEl: $("#statusAuthState"),
+    workspaceEl: $("#statusWorkspace"),
+    agentsPathEl: $("#statusAgentsPath"),
+    agentsInstructionsEl: $("#statusAgentsInstructions")
+  }
+});
+
+const authPanelController = createAuthPanel({
+  panel: authPanel,
+  closeBtn: closeAuthBtn,
+  authStore,
+  isHeadless: /Headless/i.test(navigator.userAgent || ""),
+  elements: {
+    statusEl: $("#authStatusText"),
+    methodEl: null,
+    oauthBtn: $("#authOAuthBtn"),
+    apiKeyBtn: $("#authApiKeyBtn"),
+    apiKeyForm: $("#authApiKeyForm"),
+    apiKeyInput: $("#authApiKeyInput"),
+    apiKeySubmit: $("#authApiKeySubmit"),
+    deviceBtn: $("#authDeviceBtn"),
+    deviceInstructions: $("#authDeviceInstructions"),
+    deviceCompleteBtn: $("#authDeviceCompleteBtn"),
+    logoutBtn: $("#authLogoutBtn"),
+    oauthGuidance: $("#authGuidance"),
+    headlessGuidance: $("#authHeadlessGuidance")
+  }
+});
+
+const sessionsPanelController = createSessionsPanel({
+  panel: sessionsPanel,
+  closeBtn: closeSessionsBtn,
+  sessionsStore,
+  uiRenderer,
+  elements: {
+    showAllToggle: $("#showAllSessions"),
+    activeSessionEl: $("#activeSessionId"),
+    resumeIdInput: $("#resumeSessionId"),
+    resumeIdBtn: $("#resumeSessionBtn"),
+    resumeLastBtn: $("#resumeLastSessionBtn"),
+    execPromptInput: $("#execResumePrompt"),
+    execResumeBtn: $("#execResumeLastBtn"),
+    sessionsList: $("#sessionsList"),
+    emptyStateEl: $("#sessionsEmpty")
+  }
+});
+
+authStore.subscribe(() => statusPanelController.refresh());
+
 threadOptions.bindFormEvents();
 
 threadState.setThreadBadgeProvider((threadId) => threadOptions.getThreadBadges(threadId));
@@ -115,6 +201,19 @@ window.__TEST__ = window.__TEST__ || {};
 window.__TEST__.setRestricted = (value) => {
   threadOptions.setRestricted(value);
 };
+window.__TEST__.setHeadless = (value) => {
+  authPanelController.setHeadless(value);
+};
+
+if (statusPanelBtn) {
+  statusPanelBtn.addEventListener("click", () => statusPanelController.open());
+}
+if (authPanelBtn) {
+  authPanelBtn.addEventListener("click", () => authPanelController.open());
+}
+if (sessionsPanelBtn) {
+  sessionsPanelBtn.addEventListener("click", () => sessionsPanelController.open());
+}
 
 let wsSend = () => {};
 const uiActions = createUiActions({
@@ -123,7 +222,8 @@ const uiActions = createUiActions({
   uiRenderer,
   sendMessage: (payload) => wsSend(payload),
   modal,
-  persistState: persistThreadState
+  persistState: persistThreadState,
+  onUsage: (usage) => statusPanelController.setUsage(usage)
 });
 
 const wsClient = createWsClient({

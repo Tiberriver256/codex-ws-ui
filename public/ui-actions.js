@@ -4,7 +4,8 @@ export function createUiActions({
   uiRenderer,
   sendMessage,
   modal,
-  persistState
+  persistState,
+  onUsage
 }) {
   const { addMessage, addSystemMessage, handleItem } = uiRenderer;
   const defaultThreadOptions = threadOptions.getDefaultOptions();
@@ -158,8 +159,14 @@ export function createUiActions({
             `📊 Tokens - Input: ${u.input_tokens}, Cached: ${u.cached_input_tokens}, Output: ${u.output_tokens}`,
             "usage"
           );
+          if (typeof onUsage === "function") {
+            onUsage(u);
+          }
         } else {
           addMessage("📊 Tokens - Usage unavailable", "usage");
+          if (typeof onUsage === "function") {
+            onUsage(null);
+          }
         }
         break;
 

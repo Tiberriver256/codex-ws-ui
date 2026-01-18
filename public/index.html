@@ -18,6 +18,11 @@
         <button id="threadOptionsBtn" class="thread-options-btn" disabled>Thread Settings</button>
         <span id="threadOptionsSummary" class="thread-options-summary">Defaults</span>
       </div>
+      <div class="panel-controls">
+        <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
+        <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
+        <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
+      </div>
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Connecting...</span>
     </div>
@@ -138,6 +143,126 @@
           <button type="button" id="applyOptionsBtn">Create Thread</button>
         </div>
       </form>
+    </div>
+  </div>
+  <div class="options-panel" id="statusPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Status</h2>
+          <p>Session configuration at a glance.</p>
+        </div>
+        <button type="button" id="closeStatusBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-grid">
+          <div class="panel-row">
+            <span class="panel-label">Model</span>
+            <span class="panel-value" id="statusModel">Default</span>
+          </div>
+          <div class="panel-row">
+            <span class="panel-label">Sandbox</span>
+            <span class="panel-value" id="statusSandbox">Default</span>
+          </div>
+          <div class="panel-row">
+            <span class="panel-label">Approvals</span>
+            <span class="panel-value" id="statusApprovals">Default</span>
+          </div>
+          <div class="panel-row">
+            <span class="panel-label">Working dir</span>
+            <span class="panel-value" id="statusCwd">Default</span>
+          </div>
+          <div class="panel-row">
+            <span class="panel-label">Add dirs</span>
+            <span class="panel-value panel-pre" id="statusAddDirs">None</span>
+          </div>
+          <div class="panel-row">
+            <span class="panel-label">Tokens</span>
+            <span class="panel-value" id="statusTokens">Usage unavailable</span>
+          </div>
+          <div class="panel-row">
+            <span class="panel-label">Auth</span>
+            <span class="panel-value" id="statusAuthState">Logged out</span>
+          </div>
+          <div class="panel-row">
+            <span class="panel-label">Workspace</span>
+            <span class="panel-value" id="statusWorkspace">Unknown</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <h3>AGENTS</h3>
+        <div class="panel-row">
+          <span class="panel-label">Discovery path</span>
+          <span class="panel-value" id="statusAgentsPath">AGENTS.md not found</span>
+        </div>
+        <pre class="panel-pre" id="statusAgentsInstructions">No AGENTS instructions loaded.</pre>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="authPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Auth</h2>
+          <p>Simulated sign-in flows.</p>
+        </div>
+        <button type="button" id="closeAuthBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-row">
+          <span class="panel-label">Status</span>
+          <span class="panel-value" id="authStatusText">Logged out</span>
+        </div>
+        <div class="panel-actions">
+          <button type="button" id="authOAuthBtn">Login</button>
+          <button type="button" id="authApiKeyBtn" class="ghost-btn">Login with API key</button>
+          <button type="button" id="authDeviceBtn" class="ghost-btn">Device auth</button>
+          <button type="button" id="authLogoutBtn" class="ghost-btn" hidden>Logout</button>
+        </div>
+        <div class="panel-note" id="authGuidance" hidden>OAuth flow started. Continue in your browser.</div>
+        <textarea class="panel-textarea" id="authHeadlessGuidance" hidden readonly>Headless mode: run `ssh -L 8080:localhost:8080 user@host` then open http://localhost:8080</textarea>
+        <div class="panel-inline" id="authApiKeyForm" hidden>
+          <input id="authApiKeyInput" class="panel-input" placeholder="sk-..." />
+          <button type="button" id="authApiKeySubmit">Submit API key</button>
+        </div>
+        <div class="panel-note" id="authDeviceInstructions" hidden>Visit https://auth.example/device and enter the displayed code.</div>
+        <button type="button" id="authDeviceCompleteBtn" class="ghost-btn" hidden>Complete device auth</button>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="sessionsPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Sessions</h2>
+          <p>Resume and manage recent work.</p>
+        </div>
+        <button type="button" id="closeSessionsBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-row">
+          <span class="panel-label">Active session</span>
+          <span class="panel-value" id="activeSessionId">None</span>
+        </div>
+        <label class="panel-inline">
+          <input type="checkbox" id="showAllSessions" />
+          Show all workspaces
+        </label>
+        <div class="panel-inline">
+          <input id="resumeSessionId" class="panel-input" placeholder="Session id" />
+          <button type="button" id="resumeSessionBtn">Resume</button>
+        </div>
+        <div class="panel-actions">
+          <button type="button" id="resumeLastSessionBtn" class="ghost-btn">Resume last</button>
+        </div>
+        <div class="panel-inline">
+          <input id="execResumePrompt" class="panel-input" placeholder="Exec prompt" />
+          <button type="button" id="execResumeLastBtn" class="ghost-btn">Exec resume last</button>
+        </div>
+        <div class="panel-note" id="sessionsEmpty" hidden>No sessions available.</div>
+        <div class="session-list" id="sessionsList"></div>
+      </div>
     </div>
   </div>
   <div class="modal-overlay" id="modalOverlay" hidden aria-hidden="true">
