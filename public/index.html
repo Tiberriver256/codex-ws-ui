@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/mentions.css">
 <link rel="stylesheet" href="/config.css">
 <link rel="stylesheet" href="/mcp.css">
+<link rel="stylesheet" href="/cloud.css">
 </head>
 <body>
   <div class="header">
@@ -37,6 +38,7 @@
         <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
         <button type="button" id="configPanelBtn" class="ghost-btn">Config</button>
         <button type="button" id="mcpPanelBtn" class="ghost-btn">MCP</button>
+        <button type="button" id="cloudPanelBtn" class="ghost-btn">Cloud</button>
         <button type="button" id="featureFlagsBtn" class="ghost-btn">Flags</button>
         <button type="button" id="execpolicyPanelBtn" class="ghost-btn">Execpolicy</button>
       </div>
@@ -271,6 +273,24 @@
       <div class="panel-section">
         <div class="panel-note" id="mcpEmpty" data-mcp-empty hidden>No MCP servers configured.</div>
         <div class="mcp-list" id="mcpList" data-mcp-list></div>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="cloudPanel" hidden>
+    <div class="options-card panel-card cloud-panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Cloud Tasks</h2>
+          <p>Remote tasks queued from the UI.</p>
+        </div>
+        <button type="button" id="closeCloudPanelBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-note">Run cloud workflows without leaving the session.</div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-note" id="cloudTasksEmpty" hidden>No cloud tasks available.</div>
+        <div class="cloud-tasks-list" id="cloudTasksList" data-cloud-list></div>
       </div>
     </div>
   </div>

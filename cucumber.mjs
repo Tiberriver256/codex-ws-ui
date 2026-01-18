@@ -13,6 +13,7 @@ export default {
       'features/auth.feature',
       'features/sessions.feature',
       'features/mcp.feature',
+      'features/cloud.feature',
       'features/structured-output.feature',
       'features/images.feature',
       'features/command-palette.feature',

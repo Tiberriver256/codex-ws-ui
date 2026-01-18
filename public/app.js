@@ -19,6 +19,7 @@ import { createMentions } from "./mentions.js";
 import { createConfigPanel } from "./config-panel.js";
 import { createFeatureFlagsPanel } from "./feature-flags.js";
 import { createMcpPanel } from "./mcp-panel.js";
+import { createCloudPanel } from "./cloud-panel.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -98,6 +99,7 @@ const sessionsPanelBtn = $("#sessionsPanelBtn");
 const configPanelBtn = $("#configPanelBtn");
 const featureFlagsBtn = $("#featureFlagsBtn");
 const mcpPanelBtn = $("#mcpPanelBtn");
+const cloudPanelBtn = $("#cloudPanelBtn");
 const statusPanel = $("#statusPanel");
 const closeStatusBtn = $("#closeStatusBtn");
 const authPanel = $("#authPanel");
@@ -126,6 +128,10 @@ const mcpNameInput = $("#mcpNameInput");
 const mcpUrlInput = $("#mcpUrlInput");
 const mcpAuthToggle = $("#mcpAuthToggle");
 const mcpAddBtn = $("#mcpAddBtn");
+const cloudPanel = $("#cloudPanel");
+const closeCloudPanelBtn = $("#closeCloudPanelBtn");
+const cloudTasksList = $("#cloudTasksList");
+const cloudTasksEmpty = $("#cloudTasksEmpty");
 const execpolicyPanelBtn = $("#execpolicyPanelBtn");
 const execpolicyPanel = $("#execpolicyPanel");
 const closeExecpolicyBtn = $("#closeExecpolicyBtn");
@@ -340,6 +346,16 @@ const mcpPanelController = createMcpPanel({
   }
 });
 
+const cloudPanelController = createCloudPanel({
+  panel: cloudPanel,
+  closeBtn: closeCloudPanelBtn,
+  appConfig,
+  elements: {
+    listEl: cloudTasksList,
+    emptyEl: cloudTasksEmpty
+  }
+});
+
 const execpolicyPanelController = createExecPolicyPanel({
   panel: execpolicyPanel,
   closeBtn: closeExecpolicyBtn,
@@ -444,6 +460,13 @@ window.__TEST__.setMcpServers = (servers) => {
   mcpPanelController?.setServers?.(servers);
 };
 window.__TEST__.getMcpServers = () => mcpPanelController?.getServers?.() || [];
+window.__TEST__.setCloudTasks = (tasks) => {
+  cloudPanelController?.setTasks?.(tasks);
+};
+window.__TEST__.getCloudTasks = () => cloudPanelController?.getTasks?.() || [];
+window.__TEST__.runCloudTask = (taskId) => {
+  cloudPanelController?.runTask?.(taskId);
+};
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
@@ -462,6 +485,9 @@ if (featureFlagsBtn) {
 }
 if (mcpPanelBtn) {
   mcpPanelBtn.addEventListener("click", () => mcpPanelController.open());
+}
+if (cloudPanelBtn) {
+  cloudPanelBtn.addEventListener("click", () => cloudPanelController.open());
 }
 if (execpolicyPanelBtn) {
   execpolicyPanelBtn.addEventListener("click", () => execpolicyPanelController.open());
