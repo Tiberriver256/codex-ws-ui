@@ -14,7 +14,7 @@ export default defineConfig({
     command: 'CODEX_MOCK=1 MOCK_THREAD_ID_DELAY=1 node server.mjs',
     port: 8080,
     timeout: 10000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
   projects: [
     {

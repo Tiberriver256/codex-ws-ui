@@ -170,8 +170,11 @@ test.describe('Codex WebSocket UI', () => {
     const input = page.locator('#prompt');
     const sendButton = page.locator('button[type="submit"]');
     const newThreadBtn = page.locator('#newThreadBtn');
+    const applyOptionsBtn = page.locator('#applyOptionsBtn');
 
     await newThreadBtn.click();
+    await expect(applyOptionsBtn).toBeVisible({ timeout: 5000 });
+    await applyOptionsBtn.click();
 
     await expect(page.locator('.message').filter({ hasText: /New thread created:/ })).toBeVisible({ timeout: 5000 });
 
@@ -196,8 +199,11 @@ test.describe('Codex WebSocket UI', () => {
     const input = page.locator('#prompt');
     const sendButton = page.locator('button[type="submit"]');
     const newThreadBtn = page.locator('#newThreadBtn');
+    const applyOptionsBtn = page.locator('#applyOptionsBtn');
 
     await newThreadBtn.click();
+    await expect(applyOptionsBtn).toBeVisible({ timeout: 5000 });
+    await applyOptionsBtn.click();
     await expect(page.locator('.message').filter({ hasText: /New thread created:/ })).toBeVisible({ timeout: 5000 });
 
     await input.fill('Trigger thread assignment');
@@ -243,6 +249,7 @@ test.describe('Codex WebSocket UI', () => {
     const sendButton = page.locator('button[type="submit"]');
     const newThreadBtn = page.locator('#newThreadBtn');
     const threadSelector = page.locator('#threadSelector');
+    const applyOptionsBtn = page.locator('#applyOptionsBtn');
 
     // Send a message in first thread
     await input.fill('Hello from thread 1');
@@ -256,6 +263,8 @@ test.describe('Codex WebSocket UI', () => {
 
     // Create new thread
     await newThreadBtn.click();
+    await expect(applyOptionsBtn).toBeVisible({ timeout: 5000 });
+    await applyOptionsBtn.click();
     
     // Wait for new thread creation to complete (thread_created event)
     await expect(threadSelector.locator('option')).toHaveCount(3, { timeout: 5000 });
@@ -330,5 +339,49 @@ test.describe('Codex WebSocket UI', () => {
     const agentText = await agentMessage.textContent();
     expect(agentText).toBeTruthy();
     expect(agentText.length).toBeGreaterThan(10); // More than just the emoji
+  });
+
+  test('should create thread with custom options and show summary', async ({ page }) => {
+    const newThreadBtn = page.locator('#newThreadBtn');
+    const applyOptionsBtn = page.locator('#applyOptionsBtn');
+    const modelInput = page.locator('#threadModel');
+    const sandboxSelect = page.locator('#threadSandbox');
+    const networkSelect = page.locator('#threadNetwork');
+    const webSearchSelect = page.locator('#threadWebSearch');
+    const summaryPill = page.locator('#threadOptionsSummary');
+
+    await newThreadBtn.click();
+    await expect(applyOptionsBtn).toBeVisible({ timeout: 5000 });
+
+    await modelInput.fill('gpt-test-model');
+    await sandboxSelect.selectOption('read-only');
+    await networkSelect.selectOption('on');
+    await webSearchSelect.selectOption('on');
+
+    await applyOptionsBtn.click();
+
+    await expect(page.locator('.message').filter({ hasText: /Thread options set:/ })).toBeVisible({ timeout: 5000 });
+    await expect(summaryPill).toContainText('Model: gpt-test-model');
+    await expect(summaryPill).toContainText('Sandbox: read-only');
+    await expect(summaryPill).toContainText('Network: on');
+  });
+
+  test('should update thread options mid-thread and announce', async ({ page }) => {
+    const input = page.locator('#prompt');
+    const sendButton = page.locator('button[type="submit"]');
+    const threadOptionsBtn = page.locator('#threadOptionsBtn');
+    const applyOptionsBtn = page.locator('#applyOptionsBtn');
+    const approvalSelect = page.locator('#threadApproval');
+
+    await input.fill('Start thread for options update');
+    await sendButton.click();
+
+    await threadOptionsBtn.click();
+    await expect(applyOptionsBtn).toBeVisible({ timeout: 5000 });
+    await approvalSelect.selectOption('on-request');
+    await applyOptionsBtn.click();
+
+    await expect(page.locator('.message').filter({ hasText: /Thread options updated:/ })).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#threadOptionsSummary')).toContainText('Approval: on-request');
   });
 });

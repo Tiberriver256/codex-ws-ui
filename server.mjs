@@ -38,6 +38,7 @@ const html = `<!doctype html>
     --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
   body {
     font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
     background: radial-gradient(1200px 800px at 10% -10%, rgba(138, 202, 157, 0.12), transparent 50%),
@@ -73,6 +74,7 @@ const html = `<!doctype html>
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
   }
   .thread-selector {
     background: var(--bg-elev-strong);
@@ -102,6 +104,28 @@ const html = `<!doctype html>
     font-size: 0.8rem;
     font-weight: 600;
     transition: background 0.2s, transform 0.2s;
+  }
+  .thread-options-btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .thread-options-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .thread-options-summary {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: rgba(13, 17, 23, 0.6);
   }
   .new-thread-btn:hover {
     background: var(--accent-strong);
@@ -187,6 +211,15 @@ const html = `<!doctype html>
     color: rgba(230, 237, 243, 0.6);
     cursor: not-allowed;
   }
+  .ghost-btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .ghost-btn:hover {
+    background: rgba(138, 202, 157, 0.12);
+    transform: translateY(-1px);
+  }
   .message {
     margin-bottom: 1.1rem;
   }
@@ -240,6 +273,101 @@ const html = `<!doctype html>
     text-decoration: none;
     border-bottom: 2px solid var(--accent);
   }
+  .options-panel {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 9, 13, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    z-index: 10;
+  }
+  .options-card {
+    width: min(100%, 860px);
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1.75rem;
+  }
+  .options-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .options-header h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.2rem;
+  }
+  .options-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem 1.5rem;
+  }
+  .options-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1rem;
+    background: rgba(13, 17, 23, 0.55);
+    border-radius: 14px;
+    border: 1px solid rgba(138, 202, 157, 0.12);
+  }
+  .options-section h3 {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+  .options-section label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .options-section input,
+  .options-section select,
+  .options-section textarea {
+    background: var(--bg-elev-strong);
+    color: var(--text);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  .options-section textarea {
+    resize: vertical;
+    min-height: 3.8rem;
+  }
+  .options-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .options-actions .left-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .options-summary-strip {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 0.5rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(13, 17, 23, 0.7);
+    border: 1px solid rgba(138, 202, 157, 0.2);
+  }
   @media (max-width: 700px) {
     .header {
       padding: 0.9rem 1rem;
@@ -256,6 +384,9 @@ const html = `<!doctype html>
     button,
     .new-thread-btn {
       width: 100%;
+    }
+    .options-card {
+      padding: 1.2rem;
     }
   }
   ${MOCK_MODE ? `
@@ -280,6 +411,8 @@ const html = `<!doctype html>
           <option value="">No thread</option>
         </select>
         <button id="newThreadBtn" class="new-thread-btn" disabled>+ New Thread</button>
+        <button id="threadOptionsBtn" class="thread-options-btn" disabled>Thread Settings</button>
+        <span id="threadOptionsSummary" class="thread-options-summary">Defaults</span>
       </div>
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Connecting...</span>
@@ -301,6 +434,106 @@ const html = `<!doctype html>
       </form>
     </div>
   </div>
+  <div class="options-panel" id="threadOptionsPanel" hidden>
+    <div class="options-card">
+      <div class="options-header">
+        <div>
+          <h2>Thread Options</h2>
+          <p id="threadOptionsModeText">Create a new thread with custom options.</p>
+        </div>
+        <button type="button" id="closeOptionsBtn" class="ghost-btn">Close</button>
+      </div>
+      <form id="threadOptionsForm">
+        <div class="options-grid">
+          <div class="options-section">
+            <h3>Model & Reasoning</h3>
+            <label>
+              Model
+              <input id="threadModel" placeholder="default (leave blank)" />
+            </label>
+            <label>
+              Reasoning Effort
+              <select id="threadReasoning">
+                <option value="default">Default</option>
+                <option value="minimal">Minimal</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="xhigh">Extra High</option>
+              </select>
+            </label>
+          </div>
+          <div class="options-section">
+            <h3>Safety & Approvals</h3>
+            <label>
+              Approval Policy
+              <select id="threadApproval">
+                <option value="default">Default</option>
+                <option value="never">Never</option>
+                <option value="on-request">On Request</option>
+                <option value="on-failure">On Failure</option>
+                <option value="untrusted">Untrusted</option>
+              </select>
+            </label>
+            <label>
+              Sandbox Mode
+              <select id="threadSandbox">
+                <option value="default">Default</option>
+                <option value="read-only">Read Only</option>
+                <option value="workspace-write">Workspace Write</option>
+                <option value="danger-full-access">Danger Full Access</option>
+              </select>
+            </label>
+            <label>
+              Skip Git Repo Check
+              <select id="threadSkipRepoCheck">
+                <option value="default">Default</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+          </div>
+          <div class="options-section">
+            <h3>Network & Search</h3>
+            <label>
+              Network Access
+              <select id="threadNetwork">
+                <option value="default">Default</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+            <label>
+              Web Search
+              <select id="threadWebSearch">
+                <option value="default">Default</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </label>
+          </div>
+          <div class="options-section">
+            <h3>Workspace Scope</h3>
+            <label>
+              Working Directory
+              <input id="threadWorkingDir" placeholder="/path/to/workdir" />
+            </label>
+            <label>
+              Additional Directories (one per line)
+              <textarea id="threadAdditionalDirs" placeholder="/path/one&#10;/path/two"></textarea>
+            </label>
+          </div>
+        </div>
+        <div class="options-actions">
+          <div class="left-actions">
+            <button type="button" id="resetOptionsBtn" class="ghost-btn">Use Defaults</button>
+            <span class="options-summary-strip" id="threadOptionsSummaryStrip">Defaults</span>
+          </div>
+          <button type="button" id="applyOptionsBtn">Create Thread</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <script>
     const $ = q => document.querySelector(q);
     const output = $("#output");
@@ -311,12 +544,33 @@ const html = `<!doctype html>
     const statusText = $("#statusText");
     const threadSelector = $("#threadSelector");
     const newThreadBtn = $("#newThreadBtn");
+    const threadOptionsBtn = $("#threadOptionsBtn");
+    const threadOptionsSummary = $("#threadOptionsSummary");
+    const threadOptionsPanel = $("#threadOptionsPanel");
+    const threadOptionsModeText = $("#threadOptionsModeText");
+    const closeOptionsBtn = $("#closeOptionsBtn");
+    const resetOptionsBtn = $("#resetOptionsBtn");
+    const applyOptionsBtn = $("#applyOptionsBtn");
+    const threadOptionsSummaryStrip = $("#threadOptionsSummaryStrip");
+    const threadOptionsForm = $("#threadOptionsForm");
+    const threadModel = $("#threadModel");
+    const threadReasoning = $("#threadReasoning");
+    const threadApproval = $("#threadApproval");
+    const threadSandbox = $("#threadSandbox");
+    const threadSkipRepoCheck = $("#threadSkipRepoCheck");
+    const threadNetwork = $("#threadNetwork");
+    const threadWebSearch = $("#threadWebSearch");
+    const threadWorkingDir = $("#threadWorkingDir");
+    const threadAdditionalDirs = $("#threadAdditionalDirs");
     
     let ws;
     const agentMessageDivs = new Map();
     let threads = [];
     let currentThreadId = null;
     let threadOutputs = new Map(); // Store output for each thread
+    let threadOptionsById = new Map();
+    let optionsPanelMode = "create";
+    const defaultThreadOptions = {};
     
     function connect() {
       const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
@@ -329,6 +583,7 @@ const html = `<!doctype html>
         submitBtn.disabled = false;
         threadSelector.disabled = false;
         newThreadBtn.disabled = false;
+        threadOptionsBtn.disabled = false;
         promptInput.focus();
         addSystemMessage("Connected to server");
       };
@@ -340,6 +595,7 @@ const html = `<!doctype html>
         submitBtn.disabled = true;
         threadSelector.disabled = true;
         newThreadBtn.disabled = true;
+        threadOptionsBtn.disabled = true;
         addSystemMessage("Disconnected from server");
       };
       
@@ -390,9 +646,9 @@ const html = `<!doctype html>
       });
     }
     
-    function createNewThread() {
+    function createNewThread(options = {}) {
       saveCurrentOutput();
-      ws.send(JSON.stringify({ type: "new_thread" }));
+      ws.send(JSON.stringify({ type: "new_thread", options }));
     }
     
     function switchThread(threadId) {
@@ -400,8 +656,129 @@ const html = `<!doctype html>
         saveCurrentOutput();
         currentThreadId = threadId;
         loadThreadOutput(threadId);
+        updateOptionsSummaryDisplay();
         ws.send(JSON.stringify({ type: "switch_thread", thread_id: threadId }));
       }
+    }
+
+    function setOptionsPanelMode(mode) {
+      optionsPanelMode = mode;
+      if (mode === "create") {
+        threadOptionsModeText.textContent = "Create a new thread with custom options.";
+        applyOptionsBtn.textContent = "Create Thread";
+      } else {
+        threadOptionsModeText.textContent = "Update settings for the current thread.";
+        applyOptionsBtn.textContent = "Apply Changes";
+      }
+    }
+
+    function openOptionsPanel(mode, options = {}) {
+      setOptionsPanelMode(mode);
+      fillOptionsForm(options);
+      threadOptionsPanel.hidden = false;
+    }
+
+    function closeOptionsPanel() {
+      threadOptionsPanel.hidden = true;
+    }
+
+    function formatOptionsSummary(options = {}) {
+      if (!options || Object.keys(options).length === 0) {
+        return "Defaults";
+      }
+      const pieces = [];
+      if (options.model) pieces.push("Model: " + options.model);
+      if (options.modelReasoningEffort) pieces.push("Reasoning: " + options.modelReasoningEffort);
+      if (options.sandboxMode) pieces.push("Sandbox: " + options.sandboxMode);
+      if (typeof options.networkAccessEnabled === "boolean") {
+        pieces.push("Network: " + (options.networkAccessEnabled ? "on" : "off"));
+      }
+      if (typeof options.webSearchEnabled === "boolean") {
+        pieces.push("Search: " + (options.webSearchEnabled ? "on" : "off"));
+      }
+      if (options.approvalPolicy) pieces.push("Approval: " + options.approvalPolicy);
+      if (options.workingDirectory) pieces.push("Dir: " + options.workingDirectory);
+      return pieces.join(" • ");
+    }
+
+    function updateOptionsSummaryDisplay() {
+      const summary = formatOptionsSummary(threadOptionsById.get(currentThreadId));
+      threadOptionsSummary.textContent = summary;
+      if (threadOptionsPanel.hidden) {
+        threadOptionsSummaryStrip.textContent = summary;
+      }
+    }
+
+    function fillOptionsForm(options = {}) {
+      threadModel.value = options.model || "";
+      threadReasoning.value = options.modelReasoningEffort || "default";
+      threadApproval.value = options.approvalPolicy || "default";
+      threadSandbox.value = options.sandboxMode || "default";
+      threadSkipRepoCheck.value = typeof options.skipGitRepoCheck === "boolean"
+        ? (options.skipGitRepoCheck ? "on" : "off")
+        : "default";
+      threadNetwork.value = typeof options.networkAccessEnabled === "boolean"
+        ? (options.networkAccessEnabled ? "on" : "off")
+        : "default";
+      threadWebSearch.value = typeof options.webSearchEnabled === "boolean"
+        ? (options.webSearchEnabled ? "on" : "off")
+        : "default";
+      threadWorkingDir.value = options.workingDirectory || "";
+      threadAdditionalDirs.value = Array.isArray(options.additionalDirectories)
+        ? options.additionalDirectories.join("\\n")
+        : "";
+      syncWebSearchDependency();
+      threadOptionsSummaryStrip.textContent = formatOptionsSummary(options);
+      updateOptionsSummaryDisplay();
+    }
+
+    function syncWebSearchDependency() {
+      const networkValue = threadNetwork.value;
+      if (networkValue === "off") {
+        threadWebSearch.value = "off";
+        threadWebSearch.disabled = true;
+      } else {
+        threadWebSearch.disabled = false;
+      }
+    }
+
+    function collectOptionsFromForm() {
+      const options = {};
+      const model = threadModel.value.trim();
+      if (model) options.model = model;
+      if (threadReasoning.value !== "default") {
+        options.modelReasoningEffort = threadReasoning.value;
+      }
+      if (threadApproval.value !== "default") {
+        options.approvalPolicy = threadApproval.value;
+      }
+      if (threadSandbox.value !== "default") {
+        options.sandboxMode = threadSandbox.value;
+      }
+      if (threadSkipRepoCheck.value !== "default") {
+        options.skipGitRepoCheck = threadSkipRepoCheck.value === "on";
+      }
+      if (threadNetwork.value !== "default") {
+        options.networkAccessEnabled = threadNetwork.value === "on";
+      }
+      if (threadWebSearch.value !== "default") {
+        options.webSearchEnabled = threadWebSearch.value === "on";
+      }
+      const workingDir = threadWorkingDir.value.trim();
+      if (workingDir) options.workingDirectory = workingDir;
+      const additionalDirs = threadAdditionalDirs.value
+        .split("\\n")
+        .map(dir => dir.trim())
+        .filter(Boolean);
+      if (additionalDirs.length > 0) {
+        options.additionalDirectories = additionalDirs;
+      }
+      return options;
+    }
+
+    function updateOptionsSummaryFromForm() {
+      const summary = formatOptionsSummary(collectOptionsFromForm());
+      threadOptionsSummaryStrip.textContent = summary;
     }
     
     function handleEvent(event) {
@@ -411,14 +788,20 @@ const html = `<!doctype html>
           if (!threads.includes(currentThreadId)) {
             threads.push(currentThreadId);
           }
+          threadOptionsById.set(currentThreadId, event.options || defaultThreadOptions);
           threadOutputs.set(currentThreadId, "");
           output.innerHTML = "";
           updateThreadSelector();
+          updateOptionsSummaryDisplay();
           addSystemMessage(\`✨ New thread created: \${event.thread_id}\`);
+          if (event.options && Object.keys(event.options).length > 0) {
+            addSystemMessage(\`🔧 Thread options set: \${formatOptionsSummary(event.options)}\`);
+          }
           break;
           
         case "thread_switched":
           addSystemMessage(\`🔄 Switched to thread: \${event.thread_id}\`);
+          updateOptionsSummaryDisplay();
           break;
 
         case "thread_id_assigned": {
@@ -437,7 +820,15 @@ const html = `<!doctype html>
           if (currentThreadId === tempId) {
             currentThreadId = realId;
           }
+          if (threadOptionsById.has(tempId)) {
+            threadOptionsById.set(realId, threadOptionsById.get(tempId));
+            threadOptionsById.delete(tempId);
+          }
+          if (event.options) {
+            threadOptionsById.set(realId, event.options);
+          }
           updateThreadSelector();
+          updateOptionsSummaryDisplay();
           addSystemMessage(\`✅ Thread ID assigned: \${realId}\`);
           break;
         }
@@ -458,17 +849,34 @@ const html = `<!doctype html>
               threadOutputs.delete(tempId);
             }
             currentThreadId = realId;
+            if (threadOptionsById.has(tempId)) {
+              threadOptionsById.set(realId, threadOptionsById.get(tempId));
+              threadOptionsById.delete(tempId);
+            }
             updateThreadSelector();
+            updateOptionsSummaryDisplay();
             shouldAnnounce = true;
           } else if (!threads.includes(event.thread_id)) {
             threads.push(event.thread_id);
             currentThreadId = event.thread_id;
             updateThreadSelector();
+            updateOptionsSummaryDisplay();
             shouldAnnounce = true;
           }
           if (shouldAnnounce) {
             addSystemMessage(\`Thread started: \${event.thread_id}\`);
           }
+          break;
+        }
+          
+        case "thread_options_updated": {
+          if (event.thread_id) {
+            threadOptionsById.set(event.thread_id, event.options || defaultThreadOptions);
+            if (event.thread_id === currentThreadId) {
+              updateOptionsSummaryDisplay();
+            }
+          }
+          addSystemMessage(\`🔧 Thread options updated: \${formatOptionsSummary(event.options)}\`);
           break;
         }
           
@@ -577,6 +985,50 @@ const html = `<!doctype html>
           break;
       }
     }
+
+    threadNetwork.addEventListener("change", syncWebSearchDependency);
+    threadWebSearch.addEventListener("change", syncWebSearchDependency);
+    [
+      threadModel,
+      threadReasoning,
+      threadApproval,
+      threadSandbox,
+      threadSkipRepoCheck,
+      threadNetwork,
+      threadWebSearch,
+      threadWorkingDir,
+      threadAdditionalDirs
+    ].forEach(el => {
+      el.addEventListener("input", updateOptionsSummaryFromForm);
+      el.addEventListener("change", updateOptionsSummaryFromForm);
+    });
+
+    newThreadBtn.addEventListener("click", () => {
+      openOptionsPanel("create", defaultThreadOptions);
+    });
+
+    threadOptionsBtn.addEventListener("click", () => {
+      if (!currentThreadId) {
+        openOptionsPanel("create", defaultThreadOptions);
+      } else {
+        openOptionsPanel("update", threadOptionsById.get(currentThreadId) || defaultThreadOptions);
+      }
+    });
+
+    closeOptionsBtn.addEventListener("click", closeOptionsPanel);
+    resetOptionsBtn.addEventListener("click", () => {
+      fillOptionsForm(defaultThreadOptions);
+    });
+
+    applyOptionsBtn.addEventListener("click", () => {
+      const options = collectOptionsFromForm();
+      closeOptionsPanel();
+      if (optionsPanelMode === "create") {
+        createNewThread(options);
+      } else if (currentThreadId) {
+        ws.send(JSON.stringify({ type: "update_thread_options", thread_id: currentThreadId, options }));
+      }
+    });
     
     function addMessage(text, type = "assistant", returnDiv = false) {
       const div = document.createElement("div");
@@ -600,10 +1052,6 @@ const html = `<!doctype html>
       ws.send(JSON.stringify({ type: "message", text: value }));
       promptInput.value = "";
       promptInput.focus();
-    };
-    
-    newThreadBtn.onclick = () => {
-      createNewThread();
     };
     
     threadSelector.onchange = (ev) => {
@@ -630,6 +1078,8 @@ wss.on("connection", (ws) => {
   const codex = new Codex();
   const threads = new Map(); // Store threads by ID once known
   const pendingThreads = new Map(); // temp_id -> thread while ID is pending
+  const threadOptionsById = new Map();
+  const pendingThreadOptions = new Map();
   const tempThreadIds = new WeakMap(); // thread -> temp_id
   let currentThread = null; // Store the current thread object directly
   let currentThreadId = null;
@@ -638,7 +1088,8 @@ wss.on("connection", (ws) => {
   async function processMessage(prompt) {
     // Create initial thread if none exists
     if (!currentThread) {
-      currentThread = codex.startThread({ skipGitRepoCheck: true });
+      const autoOptions = { skipGitRepoCheck: true };
+      currentThread = codex.startThread(autoOptions);
       // Note: thread.id may be null initially with the real SDK
       // It gets set after thread.started event is received
       console.log(`Auto-created thread (id pending until first turn)`);
@@ -661,12 +1112,17 @@ wss.on("connection", (ws) => {
             ws.send(JSON.stringify({
               type: "thread_id_assigned",
               temp_id: tempId,
-              thread_id: newThreadId
+              thread_id: newThreadId,
+              options: pendingThreadOptions.get(tempId) || threadOptionsById.get(tempId) || {}
             }));
           }
           // First turn - store the thread with its ID
           currentThreadId = newThreadId;
           threads.set(currentThreadId, currentThread);
+          if (pendingThreadOptions.has(tempId)) {
+            threadOptionsById.set(currentThreadId, pendingThreadOptions.get(tempId));
+            pendingThreadOptions.delete(tempId);
+          }
           console.log(`Thread ID assigned: ${currentThreadId}`);
         }
         // Note: The SDK emits thread.started on every turn with the same ID
@@ -688,21 +1144,47 @@ wss.on("connection", (ws) => {
         // Note: With real SDK, thread.id is null until first turn's thread.started event
         // We generate a temporary ID for immediate UI feedback, but it will be
         // replaced with the real ID when the first message is sent
-        currentThread = codex.startThread({ skipGitRepoCheck: true });
+        const options = message.options || {};
+        currentThread = codex.startThread(options);
         // Use thread.id if available (mock SDK), otherwise generate a temporary one
         const tempId = currentThread.id || `pending_${Date.now()}`;
         currentThreadId = currentThread.id; // Will be null with real SDK
         if (currentThreadId) {
           threads.set(currentThreadId, currentThread);
+          threadOptionsById.set(currentThreadId, options);
         } else {
           pendingThreads.set(tempId, currentThread);
           tempThreadIds.set(currentThread, tempId);
+          pendingThreadOptions.set(tempId, options);
         }
         console.log(`Created new thread: ${currentThreadId || tempId}`);
         
         ws.send(JSON.stringify({
           type: "thread_created",
-          thread_id: currentThreadId || tempId
+          thread_id: currentThreadId || tempId,
+          options
+        }));
+      } else if (message.type === "update_thread_options") {
+        const threadId = message.thread_id;
+        const options = message.options || {};
+        const targetThread = threads.get(threadId) || pendingThreads.get(threadId);
+        if (!targetThread) {
+          ws.send(JSON.stringify({
+            type: "error",
+            message: `Thread ${threadId} not found for options update`
+          }));
+          return;
+        }
+        targetThread._threadOptions = options;
+        if (threads.has(threadId)) {
+          threadOptionsById.set(threadId, options);
+        } else {
+          pendingThreadOptions.set(threadId, options);
+        }
+        ws.send(JSON.stringify({
+          type: "thread_options_updated",
+          thread_id: threadId,
+          options
         }));
       } else if (message.type === "switch_thread") {
         // Switch to an existing thread
