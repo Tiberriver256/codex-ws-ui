@@ -125,6 +125,52 @@ test.describe('Codex WebSocket UI', () => {
     await expect(agentMessage).toContainText('Hello!');
   });
 
+  test('should reuse the same thread for multiple messages', async ({ page }) => {
+    // This test validates the fix for: "Every chat message starts a new thread"
+    // Multiple messages should use the same thread, not create new ones
+    
+    const input = page.locator('#prompt');
+    const sendButton = page.locator('button[type="submit"]');
+    const threadSelector = page.locator('#threadSelector');
+    const output = page.locator('#output');
+    const THREAD_ID_PATTERN = /thread_[a-z0-9_]+/;
+
+    // Send first message
+    await input.fill('First message');
+    await sendButton.click();
+
+    // Wait for response to complete (usage message indicates turn completion)
+    await expect(page.locator('.message.usage').first()).toBeVisible({ timeout: 10000 });
+
+    // Get the thread ID from the first "Thread started" message
+    const firstThreadMessage = output.locator('.message').filter({ hasText: /Thread started:/ }).first();
+    const firstThreadText = await firstThreadMessage.textContent();
+    const threadIdMatch = firstThreadText.match(THREAD_ID_PATTERN);
+    expect(threadIdMatch).toBeTruthy();
+    const firstThreadId = threadIdMatch[0];
+
+    // Send second message
+    await input.fill('Second message');
+    await sendButton.click();
+
+    // Wait for second response to complete
+    await expect(page.locator('.message.usage')).toHaveCount(2, { timeout: 10000 });
+
+    // Get the thread ID from the second "Thread started" message
+    const threadMessages = output.locator('.message').filter({ hasText: /Thread started:/ });
+    const secondThreadMessage = threadMessages.nth(1);
+    const secondThreadText = await secondThreadMessage.textContent();
+    const secondThreadIdMatch = secondThreadText.match(THREAD_ID_PATTERN);
+    expect(secondThreadIdMatch).toBeTruthy();
+    const secondThreadId = secondThreadIdMatch[0];
+
+    // Both messages should use the SAME thread ID
+    expect(secondThreadId).toBe(firstThreadId);
+
+    // Thread selector should still only have 2 options (placeholder + 1 thread)
+    await expect(threadSelector.locator('option')).toHaveCount(2);
+  });
+
   test('should support multiple threads', async ({ page }) => {
     const input = page.locator('#prompt');
     const sendButton = page.locator('button[type="submit"]');
