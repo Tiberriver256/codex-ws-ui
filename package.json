@@ -1,0 +1,24 @@
+{
+  "name": "codex-ws-ui",
+  "version": "1.0.0",
+  "description": "Minimal localhost-only WebSocket UI for the Codex TypeScript SDK",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "start:enhanced": "node server-enhanced.mjs",
+    "start:mock": "CODEX_MOCK=1 node server-enhanced.mjs",
+    "test": "CODEX_MOCK=1 node test-mock.mjs"
+  },
+  "keywords": [
+    "codex",
+    "websocket",
+    "ui",
+    "openai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openai/codex-sdk": "^0.87.0",
+    "ws": "^8.18.0"
+  }
+}

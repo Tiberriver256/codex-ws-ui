@@ -1,20 +1,162 @@
-# Codex WebSocket UI (zx one-liner)
+# Codex WebSocket UI
 
-Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Starts a server on `http://127.0.0.1:8080` and streams responses over WebSockets.
+Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Streams AI agent responses over WebSockets with rich event handling.
+
+## Features
+
+- ✨ **Real-time streaming** - See agent responses as they're generated
+- 🎨 **Rich UI** - Visual representation of different event types (reasoning, commands, file changes, todos)
+- 🧪 **Mock mode** - Test without API key using realistic simulations
+- 📊 **Event visualization** - See todos, reasoning, command execution, and file changes
+- 🔌 **WebSocket-based** - Efficient bidirectional communication
 
 ## Requirements
-- Node.js 18+
-- A Codex API key available in `CODEX_API_KEY`
 
-## Usage
+- Node.js 18+
+- For real mode: A Codex API key in `CODEX_API_KEY` environment variable
+
+## Quick Start
+
+### Method 1: Using the original simple server (zx one-liner)
+
 Set `CODEX_API_KEY` in your shell, then run:
 ```bash
 npx zx https://raw.githubusercontent.com/Tiberriver256/codex-ws-ui/main/server.mjs --install
 ```
 
+### Method 2: Using the enhanced server with mock mode
+
+Clone this repository and run locally:
+
+```bash
+# Install dependencies
+npm install
+
+# Run in MOCK mode (no API key needed - perfect for testing!)
+npm run start:mock
+
+# Run in REAL mode (requires CODEX_API_KEY)
+export CODEX_API_KEY=your_key_here
+npm run start:enhanced
+
+# Or use the original simple server
+npm start
+```
+
 Open `http://127.0.0.1:8080` in your browser.
 
+## Servers Overview
+
+### `server.mjs` (Original)
+- Simple, minimal implementation
+- Requires `CODEX_API_KEY`
+- Basic text streaming
+- Perfect for quick one-liner usage
+
+### `server-enhanced.mjs` (New)
+- Enhanced UI with event visualization
+- Supports **mock mode** with `CODEX_MOCK=1`
+- Rich event handling (todos, reasoning, commands, file changes)
+- Better error handling
+- Visual status indicators
+- No API key required in mock mode
+
+## Mock Mode
+
+Mock mode provides a realistic simulation of the Codex SDK without requiring authentication. Perfect for:
+- 🧪 Testing the UI during development
+- 📚 Demos and presentations
+- 🎓 Learning how the SDK works
+- 🔧 UI/UX experimentation
+
+The mock implementation simulates:
+- Thread and turn lifecycle events
+- Todo list updates
+- Reasoning items
+- Command execution (with simulated output)
+- File changes
+- Token usage statistics
+- Realistic timing and event ordering
+
+Try it:
+```bash
+npm run start:mock
+# or
+CODEX_MOCK=1 node server-enhanced.mjs
+```
+
+## Event Types Supported
+
+The enhanced server visualizes all Codex SDK event types:
+
+- **Thread Events**: Thread started/stopped
+- **Turn Events**: Turn started/completed/failed
+- **Agent Messages**: Final responses from the AI
+- **Reasoning**: Internal thought process
+- **Command Execution**: Shell commands with output
+- **File Changes**: File additions, updates, deletions
+- **Todo Lists**: Task planning and progress
+- **Web Search**: Search queries (when enabled)
+- **MCP Tool Calls**: Model Context Protocol integrations
+- **Usage Stats**: Token consumption metrics
+
+## Testing
+
+Test the mock implementation:
+```bash
+npm test
+```
+
+This runs automated tests to verify:
+- Basic interactions
+- Command execution simulation
+- File change simulation
+- Non-streamed API
+- Todo list updates
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start in mock mode for development
+npm run start:mock
+
+# Start with real API
+export CODEX_API_KEY=your_key_here
+npm run start:enhanced
+```
+
+## Architecture
+
+```
+┌─────────────┐      WebSocket      ┌──────────────┐
+│   Browser   │◄───────────────────►│    Server    │
+│             │     JSON Events     │              │
+└─────────────┘                     └──────┬───────┘
+                                           │
+                                    ┌──────▼───────┐
+                                    │ Mock or Real │
+                                    │  Codex SDK   │
+                                    └──────────────┘
+```
+
+## Files
+
+- `server.mjs` - Original simple server
+- `server-enhanced.mjs` - Enhanced server with rich UI and mock support
+- `mock-codex.mjs` - Mock Codex SDK implementation
+- `test-mock.mjs` - Test suite for mock implementation
+- `package.json` - Dependencies and scripts
+
 ## Notes
-- The `--install` flag will automatically install `@openai/codex-sdk` and `ws` on first run.
-- Localhost only, no auth.
-- Review the [server.mjs](./server.mjs) source before running if you prefer to verify the script contents.
+
+- Localhost only (`127.0.0.1`), no authentication required for the web interface
+- In mock mode, no Codex API key is needed
+- In real mode, ensure `CODEX_API_KEY` is set
+- Review the source code before running if you prefer to verify the script contents
+
+## License
+
+ISC
