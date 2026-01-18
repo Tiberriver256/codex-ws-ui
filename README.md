@@ -18,11 +18,16 @@ Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Streams AI age
 
 ## Quick Start
 
-### Method 1: Using npx (zx one-liner)
+### Method 1: Using npx
 
 Run:
 ```bash
-npx zx https://raw.githubusercontent.com/Tiberriver256/codex-ws-ui/main/server.mjs --install
+npx @tiberriver256/codex-web-ui --mock
+```
+
+Optional host/port overrides:
+```bash
+npx @tiberriver256/codex-web-ui --host 0.0.0.0 --port 8080
 ```
 
 ### Method 2: Clone and run locally
@@ -41,6 +46,18 @@ npm start
 ```
 
 Open `http://127.0.0.1:8080` in your browser.
+
+To expose the UI on all interfaces (e.g., for LAN access), override the host:
+```bash
+HOST=0.0.0.0 npm start
+```
+
+## Scripts
+
+- `npm start` — Start in real mode (Codex SDK)
+- `npm run start:mock` — Start in mock mode (sets `CODEX_MOCK=1`)
+- `npm test` — Run the mock test suite
+- `npm run test:e2e` — Run Playwright end-to-end tests
 
 ## Modes
 

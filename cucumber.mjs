@@ -8,6 +8,7 @@ export default {
       'features/models.feature',
       'features/config-profiles.feature',
       'features/thread-options-basic.feature',
+      'features/thread-options.feature',
       'features/approvals.feature',
       'features/status-panel.feature',
       'features/observability.feature',

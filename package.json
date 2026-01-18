@@ -1,7 +1,7 @@
 {
-  "name": "codex-ws-ui",
+  "name": "@tiberriver256/codex-web-ui",
   "version": "1.0.0",
-  "description": "Minimal localhost-only WebSocket UI for the Codex TypeScript SDK",
+  "description": "Local WebSocket UI for the Codex TypeScript SDK",
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
@@ -9,6 +9,9 @@
     "test": "CODEX_MOCK=1 node test-mock.mjs",
     "test:e2e": "npx playwright test",
     "test:bdd": "cucumber-js"
+  },
+  "bin": {
+    "codex-web-ui": "./bin/codex-web-ui.js"
   },
   "keywords": [
     "codex",
@@ -18,6 +21,21 @@
   ],
   "author": "",
   "license": "ISC",
+  "files": [
+    "public",
+    "bin",
+    "server.mjs",
+    "server-utils.mjs",
+    "mock-codex.mjs",
+    "README.md",
+    "AGENTS.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@openai/codex-sdk": "^0.87.0",
     "ws": "^8.18.0"
