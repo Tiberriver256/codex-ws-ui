@@ -238,13 +238,14 @@ const html = `<!doctype html>
     const newThreadBtn = $("#newThreadBtn");
     
     let ws;
-    let currentMessageDiv = null;
+    const agentMessageDivs = new Map();
     let threads = [];
     let currentThreadId = null;
     let threadOutputs = new Map(); // Store output for each thread
     
     function connect() {
-      ws = new WebSocket("ws://127.0.0.1:8080");
+      const wsProtocol = location.protocol === "https:" ? "wss" : "ws";
+      ws = new WebSocket(wsProtocol + "://" + location.host);
       
       ws.onopen = () => {
         statusDot.classList.remove("disconnected");
@@ -344,26 +345,72 @@ const html = `<!doctype html>
         case "thread_switched":
           addSystemMessage(\`🔄 Switched to thread: \${event.thread_id}\`);
           break;
+
+        case "thread_id_assigned": {
+          const tempId = event.temp_id;
+          const realId = event.thread_id;
+          const tempIndex = threads.indexOf(tempId);
+          if (tempIndex !== -1) {
+            threads.splice(tempIndex, 1, realId);
+          } else if (!threads.includes(realId)) {
+            threads.push(realId);
+          }
+          if (threadOutputs.has(tempId)) {
+            threadOutputs.set(realId, threadOutputs.get(tempId));
+            threadOutputs.delete(tempId);
+          }
+          if (currentThreadId === tempId) {
+            currentThreadId = realId;
+          }
+          updateThreadSelector();
+          addSystemMessage(\`✅ Thread ID assigned: \${realId}\`);
+          break;
+        }
           
-        case "thread.started":
-          if (!threads.includes(event.thread_id)) {
+        case "thread.started": {
+          let shouldAnnounce = false;
+          if (currentThreadId && currentThreadId.startsWith("pending_")) {
+            const tempId = currentThreadId;
+            const realId = event.thread_id;
+            const tempIndex = threads.indexOf(tempId);
+            if (tempIndex !== -1) {
+              threads.splice(tempIndex, 1, realId);
+            } else if (!threads.includes(realId)) {
+              threads.push(realId);
+            }
+            if (threadOutputs.has(tempId)) {
+              threadOutputs.set(realId, threadOutputs.get(tempId));
+              threadOutputs.delete(tempId);
+            }
+            currentThreadId = realId;
+            updateThreadSelector();
+            shouldAnnounce = true;
+          } else if (!threads.includes(event.thread_id)) {
             threads.push(event.thread_id);
             currentThreadId = event.thread_id;
             updateThreadSelector();
+            shouldAnnounce = true;
           }
-          addSystemMessage(\`Thread started: \${event.thread_id}\`);
+          if (shouldAnnounce) {
+            addSystemMessage(\`Thread started: \${event.thread_id}\`);
+          }
           break;
+        }
           
         case "turn.started":
           addSystemMessage("Processing...", "assistant");
           break;
           
         case "turn.completed":
-          const u = event.usage;
-          addMessage(
-            \`📊 Tokens - Input: \${u.input_tokens}, Cached: \${u.cached_input_tokens}, Output: \${u.output_tokens}\`,
-            "usage"
-          );
+          if (event.usage) {
+            const u = event.usage;
+            addMessage(
+              \`📊 Tokens - Input: \${u.input_tokens}, Cached: \${u.cached_input_tokens}, Output: \${u.output_tokens}\`,
+              "usage"
+            );
+          } else {
+            addMessage("📊 Tokens - Usage unavailable", "usage");
+          }
           break;
           
         case "turn.failed":
@@ -387,16 +434,20 @@ const html = `<!doctype html>
       const isCompleted = event.type === "item.completed";
       
       switch (item.type) {
-        case "agent_message":
-          if (event.type === "item.started") {
-            currentMessageDiv = addMessage("", "assistant", true);
-          } else if (currentMessageDiv) {
-            currentMessageDiv.textContent = "💬 " + item.text;
-            if (isCompleted) {
-              currentMessageDiv = null;
-            }
+        case "agent_message": {
+          let messageDiv = agentMessageDivs.get(item.id);
+          if (!messageDiv && (event.type === "item.started" || event.type === "item.updated" || isCompleted)) {
+            messageDiv = addMessage("", "assistant", true);
+            agentMessageDivs.set(item.id, messageDiv);
+          }
+          if (messageDiv && (event.type === "item.updated" || isCompleted)) {
+            messageDiv.textContent = "💬 " + item.text;
+          }
+          if (isCompleted) {
+            agentMessageDivs.delete(item.id);
           }
           break;
+        }
           
         case "reasoning":
           if (isCompleted) {
@@ -503,6 +554,8 @@ wss.on("connection", (ws) => {
   console.log("Client connected");
   const codex = new Codex();
   const threads = new Map(); // Store threads by ID once known
+  const pendingThreads = new Map(); // temp_id -> thread while ID is pending
+  const tempThreadIds = new WeakMap(); // thread -> temp_id
   let currentThread = null; // Store the current thread object directly
   let currentThreadId = null;
 
@@ -526,7 +579,16 @@ wss.on("connection", (ws) => {
       // This is when the real SDK assigns the ID
       if (event.type === "thread.started" && event.thread_id) {
         const newThreadId = event.thread_id;
-        if (!currentThreadId) {
+        if (!currentThreadId || currentThreadId.startsWith("pending_")) {
+          const tempId = tempThreadIds.get(currentThread) || currentThreadId;
+          if (tempId && pendingThreads.has(tempId)) {
+            pendingThreads.delete(tempId);
+            ws.send(JSON.stringify({
+              type: "thread_id_assigned",
+              temp_id: tempId,
+              thread_id: newThreadId
+            }));
+          }
           // First turn - store the thread with its ID
           currentThreadId = newThreadId;
           threads.set(currentThreadId, currentThread);
@@ -557,6 +619,9 @@ wss.on("connection", (ws) => {
         currentThreadId = currentThread.id; // Will be null with real SDK
         if (currentThreadId) {
           threads.set(currentThreadId, currentThread);
+        } else {
+          pendingThreads.set(tempId, currentThread);
+          tempThreadIds.set(currentThread, tempId);
         }
         console.log(`Created new thread: ${currentThreadId || tempId}`);
         
@@ -575,6 +640,14 @@ wss.on("connection", (ws) => {
             type: "thread_switched",
             thread_id: currentThreadId
           }));
+        } else if (pendingThreads.has(threadId)) {
+          currentThreadId = threadId;
+          currentThread = pendingThreads.get(threadId);
+          console.log(`Switched to pending thread: ${threadId}`);
+          ws.send(JSON.stringify({
+            type: "thread_switched",
+            thread_id: currentThreadId
+          }));
         } else {
           ws.send(JSON.stringify({
             type: "error",
@@ -583,7 +656,7 @@ wss.on("connection", (ws) => {
         }
       } else if (message.type === "list_threads") {
         // List all available threads
-        const threadList = Array.from(threads.keys());
+        const threadList = Array.from(threads.keys()).concat(Array.from(pendingThreads.keys()));
         ws.send(JSON.stringify({
           type: "threads_list",
           threads: threadList,

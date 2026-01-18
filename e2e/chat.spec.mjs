@@ -132,9 +132,6 @@ test.describe('Codex WebSocket UI', () => {
     const input = page.locator('#prompt');
     const sendButton = page.locator('button[type="submit"]');
     const threadSelector = page.locator('#threadSelector');
-    const output = page.locator('#output');
-    const THREAD_ID_PATTERN = /thread_[a-z0-9_]+/;
-
     // Send first message
     await input.fill('First message');
     await sendButton.click();
@@ -142,12 +139,11 @@ test.describe('Codex WebSocket UI', () => {
     // Wait for response to complete (usage message indicates turn completion)
     await expect(page.locator('.message.usage').first()).toBeVisible({ timeout: 10000 });
 
-    // Get the thread ID from the first "Thread started" message
-    const firstThreadMessage = output.locator('.message').filter({ hasText: /Thread started:/ }).first();
-    const firstThreadText = await firstThreadMessage.textContent();
-    const threadIdMatch = firstThreadText.match(THREAD_ID_PATTERN);
-    expect(threadIdMatch).toBeTruthy();
-    const firstThreadId = threadIdMatch[0];
+    const firstThreadIds = await page.$$eval('#threadSelector option', options =>
+      options.map(o => o.value).filter(Boolean)
+    );
+    expect(firstThreadIds.length).toBe(1);
+    const firstThreadId = firstThreadIds[0];
 
     // Send second message
     await input.fill('Second message');
@@ -156,19 +152,90 @@ test.describe('Codex WebSocket UI', () => {
     // Wait for second response to complete
     await expect(page.locator('.message.usage')).toHaveCount(2, { timeout: 10000 });
 
-    // Get the thread ID from the second "Thread started" message
-    const threadMessages = output.locator('.message').filter({ hasText: /Thread started:/ });
-    const secondThreadMessage = threadMessages.nth(1);
-    const secondThreadText = await secondThreadMessage.textContent();
-    const secondThreadIdMatch = secondThreadText.match(THREAD_ID_PATTERN);
-    expect(secondThreadIdMatch).toBeTruthy();
-    const secondThreadId = secondThreadIdMatch[0];
+    const secondThreadIds = await page.$$eval('#threadSelector option', options =>
+      options.map(o => o.value).filter(Boolean)
+    );
+    expect(secondThreadIds.length).toBe(1);
+    const secondThreadId = secondThreadIds[0];
 
     // Both messages should use the SAME thread ID
     expect(secondThreadId).toBe(firstThreadId);
 
     // Thread selector should still only have 2 options (placeholder + 1 thread)
     await expect(threadSelector.locator('option')).toHaveCount(2);
+    await expect(page.locator('.message').filter({ hasText: /Thread started:/ })).toHaveCount(1);
+  });
+
+  test('should replace pending thread ID with real thread ID after first message', async ({ page }) => {
+    const input = page.locator('#prompt');
+    const sendButton = page.locator('button[type="submit"]');
+    const newThreadBtn = page.locator('#newThreadBtn');
+
+    await newThreadBtn.click();
+
+    await expect(page.locator('.message').filter({ hasText: /New thread created:/ })).toBeVisible({ timeout: 5000 });
+
+    const pendingIds = await page.$$eval('#threadSelector option', options =>
+      options.map(o => o.value).filter(Boolean)
+    );
+    expect(pendingIds.some(id => id.startsWith('pending_'))).toBeTruthy();
+
+    await input.fill('Kick off the new thread');
+    await sendButton.click();
+
+    await expect(page.locator('.message').filter({ hasText: /Thread ID assigned:/ })).toBeVisible({ timeout: 10000 });
+
+    const resolvedIds = await page.$$eval('#threadSelector option', options =>
+      options.map(o => o.value).filter(Boolean)
+    );
+    expect(resolvedIds.some(id => id.startsWith('pending_'))).toBeFalsy();
+    expect(resolvedIds.some(id => id.startsWith('thread_'))).toBeTruthy();
+  });
+
+  test('should announce thread_id_assigned in the UI', async ({ page }) => {
+    const input = page.locator('#prompt');
+    const sendButton = page.locator('button[type="submit"]');
+    const newThreadBtn = page.locator('#newThreadBtn');
+
+    await newThreadBtn.click();
+    await expect(page.locator('.message').filter({ hasText: /New thread created:/ })).toBeVisible({ timeout: 5000 });
+
+    await input.fill('Trigger thread assignment');
+    await sendButton.click();
+
+    await expect(page.locator('.message').filter({ hasText: /Thread ID assigned:/ })).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should not announce thread started on every message in same thread', async ({ page }) => {
+    const input = page.locator('#prompt');
+    const sendButton = page.locator('button[type="submit"]');
+
+    await input.fill('First message same thread');
+    await sendButton.click();
+
+    await expect(page.locator('.message').filter({ hasText: /Thread started:/ })).toHaveCount(1, { timeout: 10000 });
+
+    await input.fill('Second message same thread');
+    await sendButton.click();
+
+    await expect(page.locator('.message').filter({ hasText: /Thread started:/ })).toHaveCount(1, { timeout: 10000 });
+  });
+
+  test('should render concurrent agent messages without overwriting', async ({ page }) => {
+    const input = page.locator('#prompt');
+    const sendButton = page.locator('button[type="submit"]');
+
+    await input.fill('First concurrent message');
+    await sendButton.click();
+
+    await input.fill('Second concurrent message');
+    await sendButton.click();
+
+    const agentMessages = page.locator('.message.assistant').filter({ hasText: '💬' });
+    await expect(agentMessages).toHaveCount(2, { timeout: 15000 });
+
+    await expect(agentMessages.nth(0)).toContainText('First concurrent message');
+    await expect(agentMessages.nth(1)).toContainText('Second concurrent message');
   });
 
   test('should support multiple threads', async ({ page }) => {

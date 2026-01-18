@@ -168,7 +168,8 @@ class MockThread {
     // However, for testing convenience, we make the ID available immediately.
     // For resumed threads in both real SDK and mock, the id is set immediately.
     this._pendingId = existingId || `thread_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-    this._id = this._pendingId;
+    const delayThreadId = process.env.MOCK_THREAD_ID_DELAY === "1" || process.env.MOCK_THREAD_ID_DELAY === "true";
+    this._id = delayThreadId ? null : this._pendingId;
   }
 
   /**
