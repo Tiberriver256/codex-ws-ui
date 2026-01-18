@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.mjs",
     "start:mock": "CODEX_MOCK=1 node server.mjs",
-    "test": "CODEX_MOCK=1 node test-mock.mjs"
+    "test": "CODEX_MOCK=1 node test-mock.mjs",
+    "test:e2e": "npx playwright test"
   },
   "keywords": [
     "codex",
@@ -19,5 +20,9 @@
   "dependencies": {
     "@openai/codex-sdk": "^0.87.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "playwright": "^1.57.0"
   }
 }
