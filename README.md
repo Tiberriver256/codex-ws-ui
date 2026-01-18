@@ -17,3 +17,4 @@ Open `http://127.0.0.1:8080` in your browser.
 ## Notes
 - The `--install` flag will automatically install `@openai/codex-sdk` and `ws` on first run.
 - Localhost only, no auth.
+- Review the [server.mjs](./server.mjs) source before running if you prefer to verify the script contents.
