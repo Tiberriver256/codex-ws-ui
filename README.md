@@ -7,20 +7,19 @@ Minimal localhost-only WebSocket UI for the Codex TypeScript SDK. Streams AI age
 - ✨ **Real-time streaming** - See agent responses as they're generated
 - 🧵 **Multiple threads** - Create and switch between multiple conversation threads
 - 🎨 **Rich UI** - Visual representation of different event types (reasoning, commands, file changes, todos)
-- 🧪 **Mock mode** - Test without API key using realistic simulations
+- 🧪 **Mock mode** - Test without auth using realistic simulations
 - 📊 **Event visualization** - See todos, reasoning, command execution, and file changes
 - 🔌 **WebSocket-based** - Efficient bidirectional communication
 
 ## Requirements
 
 - Node.js 18+
-- For real mode: A Codex API key in `CODEX_API_KEY` environment variable
 
 ## Quick Start
 
 ### Method 1: Using npx (zx one-liner)
 
-Set `CODEX_API_KEY` in your shell, then run:
+Run:
 ```bash
 npx zx https://raw.githubusercontent.com/Tiberriver256/codex-ws-ui/main/server.mjs --install
 ```
@@ -33,11 +32,10 @@ Clone this repository and run:
 # Install dependencies
 npm install
 
-# Run in MOCK mode (no API key needed - perfect for testing!)
+# Run in MOCK mode (no auth needed - perfect for testing!)
 npm run start:mock
 
-# Run in REAL mode (requires CODEX_API_KEY)
-export CODEX_API_KEY=your_key_here
+# Run in REAL mode
 npm start
 ```
 
@@ -51,7 +49,7 @@ The server includes:
 - **Multiple thread support** - Create, switch, and manage multiple conversation threads
 - Rich event handling (todos, reasoning, commands, file changes)
 - Visual status indicators
-- No API key required in mock mode
+- No auth required in mock mode
 - Backward compatible with simple text-based interface
 
 ## Multiple Threads
@@ -129,8 +127,7 @@ npm install
 # Start in mock mode for development
 npm run start:mock
 
-# Start with real API
-export CODEX_API_KEY=your_key_here
+# Start in real mode
 npm run start:enhanced
 ```
 
@@ -159,8 +156,8 @@ npm run start:enhanced
 ## Notes
 
 - Localhost only (`127.0.0.1`), no authentication required for the web interface
-- In mock mode, no Codex API key is needed
-- In real mode, ensure `CODEX_API_KEY` is set
+- In mock mode, no auth is needed
+- In real mode, ensure you are authenticated to Codex
 - Review the source code before running if you prefer to verify the script contents
 
 ## License

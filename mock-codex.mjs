@@ -313,7 +313,7 @@ class MockThread {
     const lowerInput = input.toLowerCase();
     
     if (lowerInput.includes("hello") || lowerInput.includes("hi")) {
-      return "Hello! I'm a mock Codex assistant. I can help you test the WebSocket UI without needing a real API key. Try asking me to do different things!";
+      return "Hello! I'm a mock Codex assistant. I can help you test the WebSocket UI without needing auth. Try asking me to do different things!";
     }
     
     if (lowerInput.includes("help")) {

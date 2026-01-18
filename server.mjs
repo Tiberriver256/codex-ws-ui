@@ -6,14 +6,10 @@ const MOCK_MODE = process.env.CODEX_MOCK === "1" || process.env.CODEX_MOCK === "
 
 let Codex;
 if (MOCK_MODE) {
-  console.log("🧪 Running in MOCK mode - no API key required");
+  console.log("🧪 Running in MOCK mode - no auth required");
   const mockModule = await import("./mock-codex.mjs");
   Codex = mockModule.Codex;
 } else {
-  if (!process.env.CODEX_API_KEY) {
-    console.error("Set CODEX_API_KEY and rerun, or use CODEX_MOCK=1 for testing.");
-    process.exit(1);
-  }
   const realModule = await import("@openai/codex-sdk");
   Codex = realModule.Codex;
 }
@@ -605,11 +601,11 @@ wss.on("connection", (ws) => {
 });
 
 const PORT = process.env.PORT || 8080;
-const HOST = "127.0.0.1";
+const HOST = process.env.HOST || "127.0.0.1";
 
 server.listen(PORT, HOST, () => {
   console.log(`🚀 Server running at http://${HOST}:${PORT}`);
   if (MOCK_MODE) {
-    console.log("💡 Try it out! No API key needed in mock mode.");
+    console.log("💡 Try it out! No auth needed in mock mode.");
   }
 });

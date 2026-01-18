@@ -29,10 +29,9 @@ npm run start:mock
 
 This runs the server with a mock Codex SDK that simulates all features without requiring authentication.
 
-### Real Mode (With Codex API Key)
+### Real Mode
 
 ```bash
-export CODEX_API_KEY=your_actual_api_key_here
 npm start
 ```
 
@@ -85,8 +84,7 @@ npm test
 # Test the server in mock mode
 npm run start:mock
 
-# Test with real Codex SDK (requires API key)
-export CODEX_API_KEY=your_key
+# Test with real Codex SDK
 npm start
 ```
 
@@ -107,7 +105,6 @@ npm start
 
 ## Environment Variables
 
-- `CODEX_API_KEY` - Your Codex API key (required for real mode)
 - `CODEX_MOCK` - Set to `1` or `true` to enable mock mode
 - `PORT` - Server port (default: 8080)
 
@@ -118,8 +115,7 @@ npm start
 npm install
 ```
 
-**Set CODEX_API_KEY and rerun**
-Either set the API key OR run in mock mode:
+**Run in mock mode**
 ```bash
 CODEX_MOCK=1 npm start
 ```

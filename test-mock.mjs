@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Test script for the mock Codex SDK
- * This validates that the mock works correctly without needing a real API key
+ * This validates that the mock works correctly without needing auth
  */
 
 import { Codex } from "./mock-codex.mjs";
