@@ -1,53 +1,212 @@
 // Mock implementation of the Codex SDK for testing without auth
 // This simulates the behavior of the real @openai/codex-sdk
+// Based on https://github.com/openai/codex/tree/main/sdk/typescript
+
+/**
+ * @typedef {Object} CodexOptions
+ * @property {string} [codexPathOverride]
+ * @property {string} [baseUrl]
+ * @property {string} [apiKey]
+ * @property {Record<string, string>} [env]
+ */
+
+/**
+ * @typedef {Object} ThreadOptions
+ * @property {string} [model]
+ * @property {'read-only' | 'workspace-write' | 'danger-full-access'} [sandboxMode]
+ * @property {string} [workingDirectory]
+ * @property {boolean} [skipGitRepoCheck]
+ * @property {'minimal' | 'low' | 'medium' | 'high' | 'xhigh'} [modelReasoningEffort]
+ * @property {boolean} [networkAccessEnabled]
+ * @property {'disabled' | 'cached' | 'live'} [webSearchMode]
+ * @property {boolean} [webSearchEnabled]
+ * @property {'never' | 'on-request' | 'on-failure' | 'untrusted'} [approvalPolicy]
+ * @property {string[]} [additionalDirectories]
+ */
+
+/**
+ * @typedef {Object} TurnOptions
+ * @property {unknown} [outputSchema]
+ * @property {AbortSignal} [signal]
+ */
+
+/**
+ * @typedef {Object} Usage
+ * @property {number} input_tokens
+ * @property {number} cached_input_tokens
+ * @property {number} output_tokens
+ */
+
+/**
+ * @typedef {Object} AgentMessageItem
+ * @property {string} id
+ * @property {'agent_message'} type
+ * @property {string} text
+ */
+
+/**
+ * @typedef {Object} ReasoningItem
+ * @property {string} id
+ * @property {'reasoning'} type
+ * @property {string} text
+ */
+
+/**
+ * @typedef {Object} CommandExecutionItem
+ * @property {string} id
+ * @property {'command_execution'} type
+ * @property {string} command
+ * @property {string} aggregated_output
+ * @property {number} [exit_code]
+ * @property {'in_progress' | 'completed' | 'failed'} status
+ */
+
+/**
+ * @typedef {Object} FileUpdateChange
+ * @property {string} path
+ * @property {'add' | 'delete' | 'update'} kind
+ */
+
+/**
+ * @typedef {Object} FileChangeItem
+ * @property {string} id
+ * @property {'file_change'} type
+ * @property {FileUpdateChange[]} changes
+ * @property {'completed' | 'failed'} status
+ */
+
+/**
+ * @typedef {Object} TodoItem
+ * @property {string} text
+ * @property {boolean} completed
+ */
+
+/**
+ * @typedef {Object} TodoListItem
+ * @property {string} id
+ * @property {'todo_list'} type
+ * @property {TodoItem[]} items
+ */
+
+/**
+ * @typedef {Object} WebSearchItem
+ * @property {string} id
+ * @property {'web_search'} type
+ * @property {string} query
+ */
+
+/**
+ * @typedef {Object} McpToolCallItem
+ * @property {string} id
+ * @property {'mcp_tool_call'} type
+ * @property {string} server
+ * @property {string} tool
+ * @property {unknown} arguments
+ * @property {{ content: unknown[], structured_content: unknown }} [result]
+ * @property {{ message: string }} [error]
+ * @property {'in_progress' | 'completed' | 'failed'} status
+ */
+
+/**
+ * @typedef {Object} ErrorItem
+ * @property {string} id
+ * @property {'error'} type
+ * @property {string} message
+ */
+
+/**
+ * @typedef {AgentMessageItem | ReasoningItem | CommandExecutionItem | FileChangeItem | TodoListItem | WebSearchItem | McpToolCallItem | ErrorItem} ThreadItem
+ */
 
 /**
  * Mock Codex class that simulates the real SDK behavior
+ * @see https://github.com/openai/codex/blob/main/sdk/typescript/src/codex.ts
  */
 export class MockCodex {
+  /**
+   * @param {CodexOptions} options
+   */
   constructor(options = {}) {
     this.options = options;
   }
 
+  /**
+   * Starts a new conversation with an agent.
+   * @param {ThreadOptions} options
+   * @returns {MockThread}
+   */
   startThread(options = {}) {
-    return new MockThread(options);
+    return new MockThread(this.options, options);
   }
 
+  /**
+   * Resumes a conversation with an agent based on the thread id.
+   * @param {string} id - The id of the thread to resume.
+   * @param {ThreadOptions} options
+   * @returns {MockThread}
+   */
   resumeThread(id, options = {}) {
-    return new MockThread(options, id);
+    return new MockThread(this.options, options, id);
   }
 }
 
 /**
  * Mock Thread class that simulates agent interactions
+ * @see https://github.com/openai/codex/blob/main/sdk/typescript/src/thread.ts
  */
 class MockThread {
-  constructor(options = {}, id = null) {
-    this.options = options;
-    this._id = id || `thread_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  /**
+   * @param {CodexOptions} codexOptions
+   * @param {ThreadOptions} threadOptions
+   * @param {string | null} existingId
+   */
+  constructor(codexOptions = {}, threadOptions = {}, existingId = null) {
+    this._codexOptions = codexOptions;
+    this._threadOptions = threadOptions;
+    // Generate the thread ID immediately
+    // Note: In the real SDK, id is null initially and gets set after thread.started event.
+    // However, for testing convenience, we make the ID available immediately.
+    // For resumed threads in both real SDK and mock, the id is set immediately.
+    this._pendingId = existingId || `thread_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    this._id = this._pendingId;
   }
 
+  /**
+   * Returns the ID of the thread.
+   * Note: In the real SDK, this is null until the first turn starts.
+   * In the mock, it's available immediately for testing convenience.
+   * @returns {string | null}
+   */
   get id() {
     return this._id;
   }
 
   /**
-   * Simulates a streamed response with various event types
+   * Provides the input to the agent and streams events as they are produced during the turn.
+   * @param {string | Array<{type: 'text', text: string} | {type: 'local_image', path: string}>} input
+   * @param {TurnOptions} turnOptions
+   * @returns {Promise<{events: AsyncGenerator<Object>}>}
    */
   async runStreamed(input, turnOptions = {}) {
-    const events = this.generateMockEvents(input);
+    // Normalize input - real SDK supports string or UserInput[]
+    const normalizedInput = typeof input === 'string' ? input : input.map(i => i.type === 'text' ? i.text : `[image: ${i.path}]`).join('\n\n');
+    const events = this.generateMockEvents(normalizedInput, turnOptions);
     return { events };
   }
 
   /**
-   * Simulates a non-streamed response
+   * Provides the input to the agent and returns the completed turn.
+   * @param {string | Array<{type: 'text', text: string} | {type: 'local_image', path: string}>} input
+   * @param {TurnOptions} turnOptions
+   * @returns {Promise<{items: ThreadItem[], finalResponse: string, usage: Usage | null}>}
    */
   async run(input, turnOptions = {}) {
     const items = [];
     let finalResponse = "";
     let usage = null;
+    let turnFailure = null;
 
-    // Collect all events
+    // Collect all events - matches real SDK behavior
     const { events } = await this.runStreamed(input, turnOptions);
     for await (const event of events) {
       if (event.type === "item.completed") {
@@ -57,7 +216,14 @@ class MockThread {
         items.push(event.item);
       } else if (event.type === "turn.completed") {
         usage = event.usage;
+      } else if (event.type === "turn.failed") {
+        turnFailure = event.error;
+        break;
       }
+    }
+
+    if (turnFailure) {
+      throw new Error(turnFailure.message);
     }
 
     return { items, finalResponse, usage };
@@ -65,15 +231,19 @@ class MockThread {
 
   /**
    * Generates mock events to simulate a realistic agent interaction
+   * @param {string} input
+   * @param {TurnOptions} turnOptions
+   * @returns {AsyncGenerator<Object>}
    */
-  async *generateMockEvents(input) {
-    const turnId = `turn_${Date.now()}`;
-    
-    // Thread started event
+  async *generateMockEvents(input, turnOptions = {}) {
+    // Thread started event - sets the thread ID (matches real SDK behavior)
+    // The real SDK emits this on every turn since it spawns a fresh CLI process
     yield {
       type: "thread.started",
-      thread_id: this._id
+      thread_id: this._pendingId
     };
+    // Update the id after thread.started (matches real SDK)
+    this._id = this._pendingId;
 
     // Turn started event
     yield {
@@ -139,6 +309,68 @@ class MockThread {
     // Check if the user is asking about code or commands
     const needsCommand = /run|execute|command|build|test|install/i.test(input);
     const needsFiles = /file|create|write|edit|modify/i.test(input);
+    const needsWebSearch = /search|find|look up|google/i.test(input);
+    const needsMcpTool = /mcp|tool|plugin/i.test(input);
+
+    // Simulate web search if relevant
+    if (needsWebSearch) {
+      const searchId = `search_${Date.now()}`;
+      
+      yield {
+        type: "item.started",
+        item: {
+          id: searchId,
+          type: "web_search",
+          query: this.extractSearchQuery(input)
+        }
+      };
+
+      await this.delay(400);
+
+      yield {
+        type: "item.completed",
+        item: {
+          id: searchId,
+          type: "web_search",
+          query: this.extractSearchQuery(input)
+        }
+      };
+    }
+
+    // Simulate MCP tool call if relevant
+    if (needsMcpTool) {
+      const mcpId = `mcp_${Date.now()}`;
+      
+      yield {
+        type: "item.started",
+        item: {
+          id: mcpId,
+          type: "mcp_tool_call",
+          server: "mock-server",
+          tool: "mock-tool",
+          arguments: { input: input },
+          status: "in_progress"
+        }
+      };
+
+      await this.delay(500);
+
+      yield {
+        type: "item.completed",
+        item: {
+          id: mcpId,
+          type: "mcp_tool_call",
+          server: "mock-server",
+          tool: "mock-tool",
+          arguments: { input: input },
+          result: {
+            content: [{ type: "text", text: "Mock MCP tool result" }],
+            structured_content: null
+          },
+          status: "completed"
+        }
+      };
+    }
 
     // Simulate command execution if relevant
     if (needsCommand) {
@@ -188,6 +420,18 @@ class MockThread {
     if (needsFiles) {
       const fileId = `file_${Date.now()}`;
       
+      yield {
+        type: "item.started",
+        item: {
+          id: fileId,
+          type: "file_change",
+          changes: [
+            { path: "example.js", kind: "update" }
+          ],
+          status: "completed"
+        }
+      };
+
       yield {
         type: "item.completed",
         item: {
@@ -296,7 +540,22 @@ class MockThread {
   }
 
   /**
+   * Extracts a search query from the input
+   * @param {string} input
+   * @returns {string}
+   */
+  extractSearchQuery(input) {
+    // Simple extraction - remove common phrases
+    return input
+      .replace(/search for|look up|find|google/gi, '')
+      .trim()
+      .substring(0, 100);
+  }
+
+  /**
    * Generates a mock command based on the input
+   * @param {string} input
+   * @returns {string}
    */
   getMockCommand(input) {
     if (/npm|node/i.test(input)) return "npm install";
@@ -308,6 +567,8 @@ class MockThread {
 
   /**
    * Generates a contextual response based on the input
+   * @param {string} input
+   * @returns {string}
    */
   generateResponse(input) {
     const lowerInput = input.toLowerCase();
@@ -317,7 +578,15 @@ class MockThread {
     }
     
     if (lowerInput.includes("help")) {
-      return "I'm a mock assistant that simulates the Codex SDK behavior. I can demonstrate:\n- Todo lists\n- Reasoning\n- Command execution (when you mention 'run', 'execute', 'build', 'test')\n- File changes (when you mention 'file', 'create', 'write', 'edit')\n\nTry asking me to 'run a build' or 'create a file'!";
+      return "I'm a mock assistant that simulates the Codex SDK behavior. I can demonstrate:\n- Todo lists\n- Reasoning\n- Command execution (when you mention 'run', 'execute', 'build', 'test')\n- File changes (when you mention 'file', 'create', 'write', 'edit')\n- Web search (when you mention 'search', 'find', 'look up')\n- MCP tool calls (when you mention 'mcp', 'tool', 'plugin')\n\nTry asking me to 'run a build' or 'create a file'!";
+    }
+    
+    if (lowerInput.includes("search") || lowerInput.includes("find") || lowerInput.includes("look up")) {
+      return "I've simulated a web search for you. In a real scenario, I would fetch and analyze search results to provide relevant information.";
+    }
+    
+    if (lowerInput.includes("mcp") || lowerInput.includes("tool") || lowerInput.includes("plugin")) {
+      return "I've simulated an MCP tool call. The Model Context Protocol allows integration with external tools and services.";
     }
     
     if (lowerInput.includes("file") || lowerInput.includes("create") || lowerInput.includes("write")) {
@@ -338,6 +607,8 @@ class MockThread {
 
   /**
    * Helper to add delays in the event stream
+   * @param {number} ms
+   * @returns {Promise<void>}
    */
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));

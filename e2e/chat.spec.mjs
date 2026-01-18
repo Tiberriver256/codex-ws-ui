@@ -135,19 +135,22 @@ test.describe('Codex WebSocket UI', () => {
     await input.fill('Hello from thread 1');
     await sendButton.click();
 
-    // Wait for response
+    // Wait for response to complete
     await expect(page.locator('.message.assistant').filter({ hasText: '💬' })).toBeVisible({ timeout: 10000 });
+    
+    // Wait for thread to be added to selector (should have 2 options now: placeholder + thread1)
+    await expect(threadSelector.locator('option')).toHaveCount(2, { timeout: 5000 });
 
     // Create new thread
     await newThreadBtn.click();
+    
+    // Wait for new thread creation to complete (thread_created event)
+    await expect(threadSelector.locator('option')).toHaveCount(3, { timeout: 5000 });
 
-    // Verify thread selector now has multiple options
-    await expect(threadSelector.locator('option')).toHaveCount(3); // "Select a thread...", thread1, thread2
-
-    // New thread should have empty output (except system message)
+    // New thread should have minimal messages (just the "new thread created" system message)
     const messages = page.locator('.message');
     const messageCount = await messages.count();
-    // Should have minimal messages (just the "new thread created" message)
+    // Should have 1-2 messages (the thread_created notification)
     expect(messageCount).toBeLessThan(5);
   });
 
