@@ -294,6 +294,20 @@ test.describe('Codex WebSocket UI', () => {
     await expect(mockBadge).toHaveText('MOCK MODE');
   });
 
+  test('should populate model list from mock catalog', async ({ page }) => {
+    const newThreadBtn = page.locator('#newThreadBtn');
+    const modelSelect = page.locator('#threadModel');
+
+    await newThreadBtn.click();
+    await expect(modelSelect).toBeVisible({ timeout: 5000 });
+
+    const modelValues = await page.$$eval('#threadModel option', options =>
+      options.map(o => o.value).filter(Boolean)
+    );
+    expect(modelValues).toContain('gpt-test-model');
+    expect(modelValues).toContain('gpt-test-model-lite');
+  });
+
   test('should display user message with proper formatting', async ({ page }) => {
     const input = page.locator('#prompt');
     const sendButton = page.locator('button[type="submit"]');
@@ -344,7 +358,8 @@ test.describe('Codex WebSocket UI', () => {
   test('should create thread with custom options and show summary', async ({ page }) => {
     const newThreadBtn = page.locator('#newThreadBtn');
     const applyOptionsBtn = page.locator('#applyOptionsBtn');
-    const modelInput = page.locator('#threadModel');
+    const modelSelect = page.locator('#threadModel');
+    const advancedToggle = page.locator('.options-advanced summary');
     const sandboxSelect = page.locator('#threadSandbox');
     const networkSelect = page.locator('#threadNetwork');
     const webSearchSelect = page.locator('#threadWebSearch');
@@ -353,7 +368,8 @@ test.describe('Codex WebSocket UI', () => {
     await newThreadBtn.click();
     await expect(applyOptionsBtn).toBeVisible({ timeout: 5000 });
 
-    await modelInput.fill('gpt-test-model');
+    await modelSelect.selectOption('gpt-test-model-lite');
+    await advancedToggle.click();
     await sandboxSelect.selectOption('read-only');
     await networkSelect.selectOption('on');
     await webSearchSelect.selectOption('on');
@@ -361,7 +377,7 @@ test.describe('Codex WebSocket UI', () => {
     await applyOptionsBtn.click();
 
     await expect(page.locator('.message').filter({ hasText: /Thread options set:/ })).toBeVisible({ timeout: 5000 });
-    await expect(summaryPill).toContainText('Model: gpt-test-model');
+    await expect(summaryPill).toContainText('Model: gpt-test-model-lite');
     await expect(summaryPill).toContainText('Sandbox: read-only');
     await expect(summaryPill).toContainText('Network: on');
   });
@@ -371,6 +387,7 @@ test.describe('Codex WebSocket UI', () => {
     const sendButton = page.locator('button[type="submit"]');
     const threadOptionsBtn = page.locator('#threadOptionsBtn');
     const applyOptionsBtn = page.locator('#applyOptionsBtn');
+    const advancedToggle = page.locator('.options-advanced summary');
     const approvalSelect = page.locator('#threadApproval');
 
     await input.fill('Start thread for options update');
@@ -378,6 +395,7 @@ test.describe('Codex WebSocket UI', () => {
 
     await threadOptionsBtn.click();
     await expect(applyOptionsBtn).toBeVisible({ timeout: 5000 });
+    await advancedToggle.click();
     await approvalSelect.selectOption('on-request');
     await applyOptionsBtn.click();
 

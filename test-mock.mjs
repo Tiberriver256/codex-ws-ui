@@ -4,7 +4,7 @@
  * This validates that the mock works correctly without needing auth
  */
 
-import { Codex } from "./mock-codex.mjs";
+import { Codex, mockModelCatalog } from "./mock-codex.mjs";
 
 console.log("🧪 Testing Mock Codex SDK\n");
 
@@ -200,6 +200,19 @@ async function testArrayInput() {
   console.log("✅ Array input works\n");
 }
 
+async function testModelCatalog() {
+  console.log("Test 10: Mock model catalog");
+  if (!Array.isArray(mockModelCatalog) || mockModelCatalog.length === 0) {
+    throw new Error("Mock model catalog should include at least one model");
+  }
+  const defaultModel = mockModelCatalog.find((model) => model.isDefault);
+  if (!defaultModel) {
+    throw new Error("Mock model catalog should include a default model");
+  }
+  console.log(`  Default model: ${defaultModel.model}`);
+  console.log("✅ Mock model catalog available\n");
+}
+
 async function runAllTests() {
   try {
     await testBasicInteraction();
@@ -211,6 +224,7 @@ async function runAllTests() {
     await testMcpToolCall();
     await testResumeThread();
     await testArrayInput();
+    await testModelCatalog();
     
     console.log("✅ All tests passed!");
   } catch (error) {

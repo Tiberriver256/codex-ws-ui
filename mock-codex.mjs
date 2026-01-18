@@ -122,6 +122,37 @@
  * Mock Codex class that simulates the real SDK behavior
  * @see https://github.com/openai/codex/blob/main/sdk/typescript/src/codex.ts
  */
+export const mockModelCatalog = [
+  {
+    id: "mock-model-default",
+    model: "gpt-test-model",
+    displayName: "GPT Test Model",
+    description: "Mock default model for tests",
+    supportedReasoningEfforts: [
+      { reasoningEffort: "minimal", description: "Minimal reasoning" },
+      { reasoningEffort: "low", description: "Low reasoning" },
+      { reasoningEffort: "medium", description: "Medium reasoning" },
+      { reasoningEffort: "high", description: "High reasoning" },
+      { reasoningEffort: "xhigh", description: "Extra high reasoning" },
+    ],
+    defaultReasoningEffort: "medium",
+    isDefault: true,
+  },
+  {
+    id: "mock-model-alt",
+    model: "gpt-test-model-lite",
+    displayName: "GPT Test Model Lite",
+    description: "Mock alternate model for tests",
+    supportedReasoningEfforts: [
+      { reasoningEffort: "minimal", description: "Minimal reasoning" },
+      { reasoningEffort: "low", description: "Low reasoning" },
+      { reasoningEffort: "medium", description: "Medium reasoning" },
+    ],
+    defaultReasoningEffort: "low",
+    isDefault: false,
+  },
+];
+
 export class MockCodex {
   /**
    * @param {CodexOptions} options

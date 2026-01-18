@@ -7,10 +7,14 @@ import { WebSocketServer } from "ws";
 const MOCK_MODE = process.env.CODEX_MOCK === "1" || process.env.CODEX_MOCK === "true";
 
 let Codex;
+let mockModelCatalog = [];
 if (MOCK_MODE) {
   console.log("🧪 Running in MOCK mode - no auth required");
   const mockModule = await import("./mock-codex.mjs");
   Codex = mockModule.Codex;
+  if (Array.isArray(mockModule.mockModelCatalog)) {
+    mockModelCatalog = mockModule.mockModelCatalog;
+  }
 } else {
   const realModule = await import("@openai/codex-sdk");
   Codex = realModule.Codex;
@@ -82,7 +86,7 @@ async function fetchCodexModels() {
   });
 }
 
-const modelCatalog = await fetchCodexModels();
+const modelCatalog = MOCK_MODE ? mockModelCatalog : await fetchCodexModels();
 
 // Enhanced HTML with better UI
 const html = `<!doctype html>
