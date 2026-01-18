@@ -39,10 +39,10 @@ async function testBasicInteraction() {
   // After turn, thread ID should match the event ID
   console.log(`  Thread ID (after turn): ${thread.id}`);
   if (thread.id !== threadIdFromEvent) {
-    throw new Error("Thread ID should match the one from thread.started event");
+    throw new Error(`Thread ID should match the one from thread.started event. Expected: ${threadIdFromEvent}, got: ${thread.id}`);
   }
   if (thread.id !== initialId) {
-    throw new Error("Thread ID should remain consistent");
+    throw new Error(`Thread ID should remain consistent. Expected: ${initialId}, got: ${thread.id}`);
   }
   
   console.log(`✅ Received ${eventCount} events\n`);

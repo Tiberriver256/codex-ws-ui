@@ -147,11 +147,14 @@ test.describe('Codex WebSocket UI', () => {
     // Wait for new thread creation to complete (thread_created event)
     await expect(threadSelector.locator('option')).toHaveCount(3, { timeout: 5000 });
 
-    // New thread should have minimal messages (just the "new thread created" system message)
+    // New thread should have minimal messages
+    // A fresh thread typically has 1-2 system messages (e.g., "new thread created")
+    // We use threshold of 5 to allow some flexibility while catching bugs where
+    // old thread content bleeds into the new thread
+    const MAX_NEW_THREAD_MESSAGES = 5;
     const messages = page.locator('.message');
     const messageCount = await messages.count();
-    // Should have 1-2 messages (the thread_created notification)
-    expect(messageCount).toBeLessThan(5);
+    expect(messageCount).toBeLessThan(MAX_NEW_THREAD_MESSAGES);
   });
 
   test('should show connected status indicator', async ({ page }) => {

@@ -545,11 +545,13 @@ class MockThread {
    * @returns {string}
    */
   extractSearchQuery(input) {
-    // Simple extraction - remove common phrases
-    return input
+    // Simple extraction - remove common search phrases
+    const query = input
       .replace(/search for|look up|find|google/gi, '')
       .trim()
       .substring(0, 100);
+    // Return fallback query if extraction results in empty string
+    return query || 'mock search query';
   }
 
   /**
