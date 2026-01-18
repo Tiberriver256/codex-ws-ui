@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="/prompts.css">
 <link rel="stylesheet" href="/changes.css">
 <link rel="stylesheet" href="/mentions.css">
+<link rel="stylesheet" href="/config.css">
 </head>
 <body>
   <div class="header">
@@ -31,6 +32,8 @@
         <button type="button" id="statusPanelBtn" class="ghost-btn">Status</button>
         <button type="button" id="authPanelBtn" class="ghost-btn">Auth</button>
         <button type="button" id="sessionsPanelBtn" class="ghost-btn">Sessions</button>
+        <button type="button" id="configPanelBtn" class="ghost-btn">Config</button>
+        <button type="button" id="featureFlagsBtn" class="ghost-btn">Flags</button>
         <button type="button" id="execpolicyPanelBtn" class="ghost-btn">Execpolicy</button>
       </div>
       <span class="status-dot" id="statusDot"></span>
@@ -109,6 +112,20 @@
             </select>
           </label>
         </div>
+        <details class="providers-summary" id="providerSummaryDetails">
+          <summary id="providerSummary">Providers: Model: Default / OSS: Default</summary>
+          <div class="providers-summary-body">
+            <div class="panel-row">
+              <span class="panel-label">Model provider</span>
+              <span class="panel-value" id="providerModelValue">Default</span>
+            </div>
+            <div class="panel-row">
+              <span class="panel-label">OSS provider</span>
+              <span class="panel-value" id="providerOssValue">Default</span>
+            </div>
+            <p class="panel-note">Manage providers in Config.</p>
+          </div>
+        </details>
         <details class="options-advanced" id="threadOptionsAdvanced">
           <summary>Advanced settings</summary>
           <div class="options-group">
@@ -188,6 +205,57 @@
           <button type="button" id="applyOptionsBtn">Create Thread</button>
         </div>
       </form>
+    </div>
+  </div>
+  <div class="options-panel" id="configPanel" hidden>
+    <div class="options-card panel-card config-card">
+      <div class="options-header">
+        <div>
+          <h2>Config</h2>
+          <p>Profiles, providers, and effective settings.</p>
+        </div>
+        <button type="button" id="closeConfigPanelBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-row">
+          <label class="panel-label" for="configProfileSelect">Profile</label>
+          <div class="panel-inline config-profile-select">
+            <select id="configProfileSelect" class="panel-input"></select>
+            <span id="configProfileMeta" class="panel-note" hidden></span>
+          </div>
+        </div>
+        <div class="panel-row">
+          <span class="panel-label">Effective config</span>
+          <pre id="effectiveConfigPreview" class="panel-pre config-preview" data-profile="default">{}</pre>
+        </div>
+      </div>
+      <div class="panel-section">
+        <h3>Providers</h3>
+        <div class="panel-row">
+          <label class="panel-label" for="modelProviderSelect">Model provider</label>
+          <select id="modelProviderSelect" class="panel-input"></select>
+        </div>
+        <div class="panel-row">
+          <label class="panel-label" for="ossProviderSelect">OSS provider</label>
+          <select id="ossProviderSelect" class="panel-input"></select>
+        </div>
+        <p class="panel-note">Selections are reflected in thread settings.</p>
+      </div>
+    </div>
+  </div>
+  <div class="options-panel" id="featureFlagsPanel" hidden>
+    <div class="options-card panel-card">
+      <div class="options-header">
+        <div>
+          <h2>Feature Flags</h2>
+          <p>Toggle experimental UI features.</p>
+        </div>
+        <button type="button" id="closeFeatureFlagsBtn" class="ghost-btn">Close</button>
+      </div>
+      <div class="panel-section">
+        <div class="panel-note" id="featureFlagsEmpty" hidden>No feature flags available.</div>
+        <div class="flags-list" id="featureFlagsList"></div>
+      </div>
     </div>
   </div>
   <div class="options-panel" id="statusPanel" hidden>

@@ -15,6 +15,8 @@ import { createPromptsPalette } from "./prompts-palette.js";
 import { createChangesStore } from "./changes-store.js";
 import { createDiffPanel, createReviewPanel } from "./changes-panels.js";
 import { createMentions } from "./mentions.js";
+import { createConfigPanel } from "./config-panel.js";
+import { createFeatureFlagsPanel } from "./feature-flags.js";
 import {
   createAuthPanel,
   createAuthStore,
@@ -89,12 +91,28 @@ const modalActions = $("#modalActions");
 const statusPanelBtn = $("#statusPanelBtn");
 const authPanelBtn = $("#authPanelBtn");
 const sessionsPanelBtn = $("#sessionsPanelBtn");
+const configPanelBtn = $("#configPanelBtn");
+const featureFlagsBtn = $("#featureFlagsBtn");
 const statusPanel = $("#statusPanel");
 const closeStatusBtn = $("#closeStatusBtn");
 const authPanel = $("#authPanel");
 const closeAuthBtn = $("#closeAuthBtn");
 const sessionsPanel = $("#sessionsPanel");
 const closeSessionsBtn = $("#closeSessionsBtn");
+const configPanel = $("#configPanel");
+const closeConfigPanelBtn = $("#closeConfigPanelBtn");
+const configProfileSelect = $("#configProfileSelect");
+const configProfileMeta = $("#configProfileMeta");
+const effectiveConfigPreview = $("#effectiveConfigPreview");
+const modelProviderSelect = $("#modelProviderSelect");
+const ossProviderSelect = $("#ossProviderSelect");
+const providerSummary = $("#providerSummary");
+const providerModelValue = $("#providerModelValue");
+const providerOssValue = $("#providerOssValue");
+const featureFlagsPanel = $("#featureFlagsPanel");
+const closeFeatureFlagsBtn = $("#closeFeatureFlagsBtn");
+const featureFlagsList = $("#featureFlagsList");
+const featureFlagsEmpty = $("#featureFlagsEmpty");
 const execpolicyPanelBtn = $("#execpolicyPanelBtn");
 const execpolicyPanel = $("#execpolicyPanel");
 const closeExecpolicyBtn = $("#closeExecpolicyBtn");
@@ -257,6 +275,32 @@ const sessionsPanelController = createSessionsPanel({
   }
 });
 
+const configPanelController = createConfigPanel({
+  panel: configPanel,
+  closeBtn: closeConfigPanelBtn,
+  appConfig,
+  elements: {
+    profileSelect: configProfileSelect,
+    profileMeta: configProfileMeta,
+    previewEl: effectiveConfigPreview,
+    modelProviderSelect,
+    ossProviderSelect,
+    providerSummaryEl: providerSummary,
+    providerModelValue,
+    providerOssValue
+  }
+});
+
+const featureFlagsPanelController = createFeatureFlagsPanel({
+  panel: featureFlagsPanel,
+  closeBtn: closeFeatureFlagsBtn,
+  appConfig,
+  elements: {
+    listEl: featureFlagsList,
+    emptyEl: featureFlagsEmpty
+  }
+});
+
 const execpolicyPanelController = createExecPolicyPanel({
   panel: execpolicyPanel,
   closeBtn: closeExecpolicyBtn,
@@ -338,6 +382,20 @@ window.__TEST__.getWorkspaceFiles = () => workspaceFiles;
 window.__TEST__.startNewSession = () => {
   promptsPalette?.close?.();
 };
+window.__TEST__.setConfigProfiles = (profiles, baseConfig) => {
+  configPanelController?.setProfiles?.(profiles, baseConfig);
+};
+window.__TEST__.setConfigProviders = (providers) => {
+  configPanelController?.setProviders?.(providers);
+};
+window.__TEST__.setProviderSelection = (selection) => {
+  configPanelController?.setProviderSelection?.(selection);
+};
+window.__TEST__.getConfigState = () => configPanelController?.getState?.();
+window.__TEST__.setFeatureFlags = (flags) => {
+  featureFlagsPanelController?.setFlags?.(flags);
+};
+window.__TEST__.getFeatureFlags = () => featureFlagsPanelController?.getFlags?.();
 
 if (statusPanelBtn) {
   statusPanelBtn.addEventListener("click", () => statusPanelController.open());
@@ -347,6 +405,12 @@ if (authPanelBtn) {
 }
 if (sessionsPanelBtn) {
   sessionsPanelBtn.addEventListener("click", () => sessionsPanelController.open());
+}
+if (configPanelBtn) {
+  configPanelBtn.addEventListener("click", () => configPanelController.open());
+}
+if (featureFlagsBtn) {
+  featureFlagsBtn.addEventListener("click", () => featureFlagsPanelController.open());
 }
 if (execpolicyPanelBtn) {
   execpolicyPanelBtn.addEventListener("click", () => execpolicyPanelController.open());
